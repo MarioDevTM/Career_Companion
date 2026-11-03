@@ -1,0 +1,1 @@
+"""Career Companion core package."""
