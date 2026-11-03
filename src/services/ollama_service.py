@@ -385,7 +385,11 @@ class OllamaService:
         return "Provide a concise, direct response grounded in the supplied context."
 
     def _options(self, temperature: float, response_depth: str) -> dict[str, Any]:
-        num_predict = self.output_tokens if response_depth == "Detailed" else min(self.output_tokens, 512)
+        num_predict = (
+            self.output_tokens
+            if response_depth == "Detailed"
+            else min(self.output_tokens, 1536)
+        )
         return {
             "temperature": temperature,
             "num_ctx": self.num_ctx,
