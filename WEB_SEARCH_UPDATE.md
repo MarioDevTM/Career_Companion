@@ -1,32 +1,16 @@
-# Web search update
+# Web search configuration
 
-## Apply to your existing project
-Stop Streamlit and back up your project. Copy src/services/gemini_service.py,
-src/ui/assistant_view.py, and src/config.py from this package into the matching
-locations in your project. Keep your existing .env and data directory.
-Install dependencies using python -m pip install -r requirements.txt, then
-restart using python -m streamlit run app.py.
+This release uses Ollama for generation and optional Firecrawl v2 search.
+It has no Gemini dependency. See DEPLOYMENT.md for current configuration.
 
-In AI Assistant choose Sources:
-- Combine my materials + web (default): selected context plus Google Search.
-- Search the web: excludes selected documents, profile, and prior conversation;
-  your typed prompt is still sent.
-- My materials (no web search): previous behavior, with no search tool.
+Sources defaults to **My materials (no web search)**. Combined mode uses search
+when configured and explicitly reports a fallback if retrieval fails. Web-only
+mode stops on retrieval failure rather than pretending its answer is verified.
+The typed request (up to 300 characters) is sent to Firecrawl; selected documents
+and profile entries are not automatically included in the search query.
 
-Tutor/mock interview responses stream. Structured modes research with Google
-Search first, then format and validate using the existing schema. This requires
-two API calls. Search activity is displayed when reported by stream events.
-Provider citation links and search suggestions persist with saved messages.
-A source list indicates provider attribution, not verification of every claim.
-Search may be skipped by Gemini; the app explicitly reports missing evidence.
-
-Search-enabled requests allow 180 seconds. Structured formatting still uses the
-existing Quick/Detailed budget. This update does not diagnose or eliminate the
-previous latency issue. Search can increase latency and API usage.
-
-The package contains source only: no API credentials, database, uploaded
-personal documents, environment, or IDE files. A credential-like placeholder
-comparison in config.py has been replaced with generic placeholder checks.
-
-Validation: 26 focused tests passed with mocked Gemini calls. No live request
-or complete interactive browser test was performed.
+Retrieved snippets are untrusted reference data, and the source list contains
+actual retrieval URLs. Sources do not prove every claim in a model's answer.
+Search has no automatic retries; cache entries are limited to 100 per browser
+session and expire according to SEARCH_CACHE_TTL_SECONDS. Set this to 0 for
+fresh searches. The cache is ephemeral and cleared when signing out.

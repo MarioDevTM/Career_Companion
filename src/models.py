@@ -2,6 +2,7 @@ from datetime import datetime, date
 from typing import Optional, List
 from sqlalchemy import (
     String,
+    LargeBinary,
     Integer,
     Float,
     Boolean,
@@ -438,3 +439,10 @@ class ChatMessage(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
     session: Mapped["ChatSession"] = relationship("ChatSession", back_populates="messages")
+
+
+class DocumentContent(Base):
+    """Original attachment bytes stored transactionally with the workspace database."""
+    __tablename__ = "document_contents"
+    document_id: Mapped[int] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"), primary_key=True)
+    content: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)

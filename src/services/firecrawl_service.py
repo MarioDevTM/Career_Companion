@@ -1,4 +1,6 @@
 import time
+import hashlib
+import copy
 from dataclasses import dataclass, field
 from typing import Optional, Any
 from urllib.parse import urlsplit
@@ -25,7 +27,7 @@ class FirecrawlService:
     all retrieved web snippets as untrusted passive reference material.
     """
 
-    API_URL = "https://api.firecrawl.dev/v1/search"
+    API_URL = "https://api.firecrawl.dev/v2/search"
     MAX_SNIPPET_CHARS = 900
     _cache: dict[tuple[str, int], tuple[float, FirecrawlSearchResult]] = {}
 
@@ -36,6 +38,7 @@ class FirecrawlService:
         max_results: Optional[int] = None,
         cache_ttl_seconds: Optional[int] = None,
         http_client: Optional[Any] = None,
+        cache: Optional[dict] = None,
     ):
         self.api_key = api_key if api_key is not None else AppConfig.get_firecrawl_api_key()
         self.timeout_seconds = timeout_seconds or AppConfig.get_firecrawl_timeout()
@@ -44,6 +47,7 @@ class FirecrawlService:
             cache_ttl_seconds if cache_ttl_seconds is not None else AppConfig.get_search_cache_ttl_seconds()
         )
         self._http_client = http_client
+        self._cache = cache if cache is not None else {}
 
     def is_configured(self) -> bool:
         return bool(self.api_key)
@@ -57,7 +61,7 @@ class FirecrawlService:
         if not isinstance(url, str):
             return False
         parsed = urlsplit(url.strip())
-        return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+        return parsed.scheme in {"http", "https"} and bool(parsed.hostname) and not parsed.username and not parsed.password
 
     @classmethod
     def _clean_snippet(cls, raw_text: str) -> str:
@@ -82,12 +86,12 @@ class FirecrawlService:
                 query=cleaned_query,
                 error_type="firecrawl_not_configured",
                 error_message=(
-                    "Firecrawl web search is not configured. Set FIRECRAWL_API_KEY in .env "
+                    "Firecrawl web search is not configured. Set FIRECRAWL_API_KEY in deployment secrets or .env "
                     "or switch Sources to 'My materials (no web search)'."
                 ),
             )
 
-        cache_key = (cleaned_query.lower(), self.max_results)
+        cache_key = (hashlib.sha256(self.api_key.encode()).hexdigest(), cleaned_query, self.max_results)
         now = time.monotonic()
         if self.cache_ttl_seconds > 0 and cache_key in self._cache:
             cached_at, cached_result = self._cache[cache_key]
@@ -95,7 +99,7 @@ class FirecrawlService:
                 return FirecrawlSearchResult(
                     success=cached_result.success,
                     query=cached_result.query,
-                    sources=list(cached_result.sources),
+                    sources=copy.deepcopy(cached_result.sources),
                     formatted_context=cached_result.formatted_context,
                     error_type=cached_result.error_type,
                     error_message=cached_result.error_message,
@@ -109,6 +113,8 @@ class FirecrawlService:
         payload = {
             "query": cleaned_query[:300],
             "limit": self.max_results,
+            "sources": [{"type": "web"}],
+            "timeout": int(self.timeout_seconds * 1000),
         }
 
         try:
@@ -125,12 +131,20 @@ class FirecrawlService:
                 return FirecrawlSearchResult(
                     success=False,
                     query=cleaned_query,
-                    error_type="firecrawl_http_error",
-                    error_message=f"Firecrawl retrieval failed (HTTP {status_code}). Verify FIRECRAWL_API_KEY and quota.",
+                    error_type={401: "firecrawl_authentication", 403: "firecrawl_authentication",
+                                402: "firecrawl_credits", 429: "firecrawl_rate_limit"}.get(status_code, "firecrawl_http_error"),
+                    error_message={401: "Firecrawl credentials are invalid.", 403: "Firecrawl access was denied.",
+                                   402: "Firecrawl credits are exhausted. Use My materials to continue without search.",
+                                   429: "Firecrawl rate limit reached. Wait before retrying or use My materials."}.get(
+                                       status_code, f"Firecrawl retrieval failed (HTTP {status_code})."),
                 )
 
             body = response.json()
             raw_items = body.get("data", []) if isinstance(body, dict) else []
+            if isinstance(raw_items, dict):
+                raw_items = raw_items.get("web", [])
+            if not isinstance(raw_items, list):
+                raw_items = []
             sources: list[dict[str, str]] = []
             context_blocks: list[str] = []
 
@@ -157,12 +171,19 @@ class FirecrawlService:
 
             formatted_context = "\n\n".join(context_blocks)
             result = FirecrawlSearchResult(
-                success=True,
+                success=bool(sources),
+                error_type=None if sources else "firecrawl_empty",
+                error_message=None if sources else "No usable web results were returned.",
                 query=cleaned_query,
                 sources=sources,
                 formatted_context=formatted_context,
             )
-            if self.cache_ttl_seconds > 0:
+            if self.cache_ttl_seconds > 0 and sources:
+                expired = [k for k, (stamp, _) in self._cache.items() if now - stamp > self.cache_ttl_seconds]
+                for key in expired:
+                    self._cache.pop(key, None)
+                while len(self._cache) >= 100:
+                    self._cache.pop(next(iter(self._cache)))
                 self._cache[cache_key] = (now, result)
             return result
 
@@ -171,19 +192,19 @@ class FirecrawlService:
                 success=False,
                 query=cleaned_query,
                 error_type="firecrawl_timeout",
-                error_message=f"Firecrawl web search timed out after {self.timeout_seconds:.0f}s: {exc}",
+                error_message=f"Firecrawl web search timed out after {self.timeout_seconds:.0f}s.",
             )
         except (httpx.RequestError, ConnectionError) as exc:
             return FirecrawlSearchResult(
                 success=False,
                 query=cleaned_query,
                 error_type="firecrawl_network_error",
-                error_message=f"Firecrawl network error: {exc}",
+                error_message="Firecrawl is unreachable. Try again later or use My materials.",
             )
         except Exception as exc:
             return FirecrawlSearchResult(
                 success=False,
                 query=cleaned_query,
                 error_type="firecrawl_error",
-                error_message=f"Firecrawl retrieval error ({type(exc).__name__}): {exc}",
+                error_message="Firecrawl returned an unexpected response. Use My materials or try again later.",
             )

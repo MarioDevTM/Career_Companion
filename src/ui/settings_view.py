@@ -2,7 +2,7 @@ from zoneinfo import available_timezones
 import streamlit as st
 from sqlalchemy.orm import Session
 
-from src.config import AppConfig
+from src.config import AppConfig, setting, is_cloud
 from src.database import set_setting
 from src.services.ollama_service import OllamaService
 from src.services.backup_service import BackupService
@@ -36,27 +36,36 @@ def render_settings_view(session: Session) -> None:
     col_ai, col_tz = st.columns(2)
 
     with col_ai:
-        st.subheader("Local Ollama AI Configuration")
-        st.caption("No external LLM API key is required. Inference runs locally via Ollama.")
+        st.subheader("Ollama AI Configuration")
+        st.caption("Inference runs on your configured Ollama server. Cloud deployments require an authenticated HTTPS endpoint.")
 
         if AppConfig.get_firecrawl_api_key():
-            st.info("🌐 Optional Firecrawl Web Search: `FIRECRAWL_API_KEY` is configured.")
+            st.info("Optional Firecrawl Web Search: `FIRECRAWL_API_KEY` is configured.")
         else:
-            st.caption("🌐 Optional Firecrawl Web Search: Not configured (local materials work without it).")
+            st.caption("Optional Firecrawl Web Search: Not configured (local materials work without it).")
 
+        locked = is_cloud() or bool(setting("OLLAMA_BASE_URL") or setting("OLLAMA_MODEL"))
+        if locked:
+            st.caption("Endpoint and model are managed by deployment secrets or environment settings. Update them there, then restart the app.")
         with st.form("ollama_settings_form"):
             new_base_url = st.text_input(
                 "Ollama Base URL (`OLLAMA_BASE_URL`)",
                 value=current_base_url,
-                help="Default: http://localhost:11434",
+                help="Default for local development: http://localhost:11434",
+                disabled=locked,
             )
             new_model = st.text_input(
                 "Configured Ollama Model (`OLLAMA_MODEL`)",
                 value=current_model,
-                help="Default: qwen2.5:0.5b (pull via: ollama pull qwen2.5:0.5b)",
+                help="Default: qwen2.5:0.5b (install on the Ollama host)",
+                disabled=locked,
             )
-            if st.form_submit_button("Save Ollama Settings"):
-                if new_base_url.strip() and new_model.strip():
+            if st.form_submit_button("Save Ollama Settings", disabled=locked):
+                from src.services.endpoint import validate_endpoint
+                error = validate_endpoint(new_base_url.strip())
+                if error:
+                    st.error(error)
+                elif new_base_url.strip() and new_model.strip():
                     set_setting(session, "ollama_base_url", new_base_url.strip().rstrip("/"))
                     set_setting(session, "ollama_model", new_model.strip())
                     st.success(
@@ -64,12 +73,12 @@ def render_settings_view(session: Session) -> None:
                     )
                     st.rerun()
 
-        if st.button("🔌 Run Live Ollama & Model Check"):
+        if st.button("Run Live Ollama & Model Check"):
             with st.spinner(f"Checking Ollama at `{current_base_url}` and testing `{current_model}`..."):
                 res = ollama.check_connection()
             if res.success:
                 st.success(
-                    f"✅ Local Ollama connection verified! Model `{res.model_used}` responded: `{res.text}`"
+                    f"Ollama connection verified! Model `{res.model_used}` responded: `{res.text}`"
                 )
             else:
                 st.error(f"Connection check failed (`{res.error_type}`): {res.error_message}")
@@ -100,23 +109,28 @@ def render_settings_view(session: Session) -> None:
     exp_col1, exp_col2, exp_col3 = st.columns(3)
     csv_data = BackupService.export_applications_csv(session)
     exp_col1.download_button(
-        "📄 Download Applications CSV",
+        "Download Applications CSV",
         data=csv_data,
         file_name="career_companion_applications.csv",
         mime="text/csv",
-        use_container_width=True,
+        width="stretch",
     )
 
-    zip_bytes = BackupService.create_backup_zip_bytes(session)
+    if exp_col2.button("Prepare Full Backup", width="stretch"):
+        try:
+            st.session_state["prepared_backup"] = BackupService.create_backup_zip_bytes(session)
+        except Exception:
+            st.error("Backup failed. Check that all original attachments are available.")
     exp_col2.download_button(
-        "📦 Download Full Backup (.zip)",
-        data=zip_bytes,
+        "Download Full Backup (.zip)",
+        data=st.session_state.get("prepared_backup", b""),
+        disabled="prepared_backup" not in st.session_state,
         file_name="career_companion_backup.zip",
         mime="application/zip",
-        use_container_width=True,
+        width="stretch",
     )
 
-    if exp_col3.button("🎭 Load Fictional Demo Data", use_container_width=True):
+    if exp_col3.button("Load Fictional Demo Data", width="stretch"):
         DemoService.load_fictional_demo_data(session)
         st.success("Fictional demo data added!")
         st.rerun()
@@ -133,15 +147,15 @@ def render_settings_view(session: Session) -> None:
         raw_zip = restore_file.getvalue()
         is_valid, preview, err = BackupService.validate_and_preview_backup(raw_zip)
         if not is_valid:
-            st.error(f"❌ Invalid backup file: {err}")
+            st.error(f"Invalid backup file: {err}")
         else:
             st.success(
-                f"✅ Backup validated! Exported at `{preview.get('exported_at')}` "
+                f"Backup validated! Exported at `{preview.get('exported_at')}` "
                 f"(Schema `{preview.get('schema_version')}`, Attachments: `{preview.get('attachment_count')}`)."
             )
             st.json(preview.get("table_counts", {}))
             confirm_restore = st.checkbox(
-                "⚠️ I understand that restoring this backup will replace current workspace records."
+                "I understand that restoring this backup will replace current workspace records."
             )
             if st.button("Restore Workspace from Backup", type="primary", disabled=not confirm_restore):
                 try:
@@ -151,4 +165,4 @@ def render_settings_view(session: Session) -> None:
                     st.success(f"Workspace restored successfully! Restored tables: {restored_counts}")
                     st.rerun()
                 except Exception as exc:
-                    st.error(f"Restore failed and existing data was preserved via rollback: {exc}")
+                    st.error("Restore failed; database changes were rolled back. Check the backup format and database permissions.")

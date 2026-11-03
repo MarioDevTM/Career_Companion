@@ -1,6 +1,8 @@
 import streamlit as st
 
 from src.database import init_db, get_db_session
+from src.access import require_owner, validate_storage
+from src.config import AppConfig
 from src.ui.helpers import (
     get_active_timezone,
     get_active_ollama_model,
@@ -30,15 +32,31 @@ NAVIGATION_PAGES = [
 ]
 
 
+@st.cache_resource(show_spinner=False)
+def initialize_database(database_url: str) -> None:
+    # Avoid repeating schema inspection/migrations on every widget rerun.
+    init_db(database_url)
+
+
 def main() -> None:
     st.set_page_config(
         page_title="Career Companion",
-        page_icon="🧭",
+        page_icon=":material/work:",
         layout="wide",
-        initial_sidebar_state="expanded",
+        initial_sidebar_state="auto",
     )
 
-    init_db()
+    require_owner()
+    validate_storage()
+    try:
+        initialize_database(AppConfig.get_database_url())
+    except Exception:
+        st.error("Could not open the workspace database. Check the deployment DATABASE_URL, SSL settings, and database availability.")
+        st.stop()
+
+    pending_page = st.session_state.pop("_navigate_to", None)
+    if pending_page in NAVIGATION_PAGES:
+        st.session_state["nav_page"] = pending_page
 
     if "nav_page" not in st.session_state:
         st.session_state["nav_page"] = "Dashboard"
@@ -49,7 +67,7 @@ def main() -> None:
         active_base_url = get_active_ollama_base_url(session)
 
         with st.sidebar:
-            st.title("🧭 Career Companion")
+            st.title("Career Companion")
             st.caption("Personal Job Search & Learning Hub")
             selected_page = st.radio(
                 "Navigation",
@@ -57,13 +75,13 @@ def main() -> None:
                 index=NAVIGATION_PAGES.index(st.session_state["nav_page"])
                 if st.session_state["nav_page"] in NAVIGATION_PAGES
                 else 0,
+                key="nav_page",
             )
-            st.session_state["nav_page"] = selected_page
 
             st.divider()
-            st.caption("**AI Provider:** `Ollama (Local)`")
+            st.caption("**AI Provider:** `Ollama`")
             st.caption(f"**Model:** `{active_model}`")
-            st.caption(f"**Endpoint:** `{active_base_url}`")
+
             st.caption(f"**Timezone:** `{active_tz}`")
 
         if selected_page == "Dashboard":

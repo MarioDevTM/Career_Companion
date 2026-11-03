@@ -8,8 +8,10 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from src.config import UPLOADS_DIR, utc_now
+from src.services.document_service import DocumentService
 from src.models import (
     Base,
+    DocumentContent,
     UserSetting,
     ProfileEntry,
     Document,
@@ -34,7 +36,13 @@ from src.models import (
 )
 
 
-SENSITIVE_SETTING_KEYS = {"firecrawl_api_key", "api_key", "secret", "token", "password"}
+SENSITIVE_SETTING_KEYS = {"firecrawl_api_key", "gemini_api_key", "ollama_api_key", "api_key", "secret", "token", "password", "database_url"}
+
+def _sensitive(key: str) -> bool:
+    return key.lower() in SENSITIVE_SETTING_KEYS or any(
+        part in key.lower() for part in ("secret", "password", "token", "api_key")
+    )
+
 
 SERIALIZATION_MODELS = [
     ("user_settings", UserSetting),
@@ -113,7 +121,7 @@ class BackupService:
             rows = list(session.scalars(select(model_cls)).all())
             serialized_rows = []
             for row in rows:
-                if model_cls is UserSetting and row.key.lower() in SENSITIVE_SETTING_KEYS:
+                if model_cls is UserSetting and _sensitive(row.key):
                     continue
                 row_dict = {
                     col.name: _serialize_value(getattr(row, col.name))
@@ -138,9 +146,12 @@ class BackupService:
             for doc_row in tables_payload.get("documents", []):
                 stored_name = doc_row.get("stored_filename")
                 if stored_name:
-                    disk_path = UPLOADS_DIR / stored_name
-                    if disk_path.exists():
-                        zf.write(disk_path, arcname=f"uploads/{stored_name}")
+                    doc = session.get(Document, doc_row["id"])
+                    try:
+                        content = DocumentService.read_bytes(session, doc)
+                    except FileNotFoundError as exc:
+                        raise ValueError("A legacy attachment is missing. Restore the uploads folder before exporting.") from exc
+                    zf.writestr(f"uploads/{stored_name}", content)
 
         return buffer.getvalue()
 
@@ -152,6 +163,12 @@ class BackupService:
         try:
             with zipfile.ZipFile(io.BytesIO(zip_bytes), mode="r") as zf:
                 names = zf.namelist()
+                if len(names) != len(set(names)):
+                    return False, {}, "Backup contains duplicate archive entries."
+                if sum(item.file_size for item in zf.infolist()) > 250 * 1024 * 1024:
+                    return False, {}, "Backup expands beyond the 250 MB restore limit."
+                if zf.getinfo("backup_manifest.json").file_size > 50 * 1024 * 1024:
+                    return False, {}, "Backup manifest exceeds 50 MB."
                 if "backup_manifest.json" not in names:
                     return False, {}, "Archive is missing 'backup_manifest.json'."
 
@@ -196,6 +213,9 @@ class BackupService:
             tables = manifest["tables"]
 
             try:
+                session.flush()
+                session.expunge_all()
+                session.execute(DocumentContent.__table__.delete())
                 session.execute(learning_goal_applications.delete())
                 for _, model_cls in reversed(SERIALIZATION_MODELS):
                     session.execute(model_cls.__table__.delete())
@@ -203,7 +223,7 @@ class BackupService:
                 for table_key, model_cls in SERIALIZATION_MODELS:
                     rows = tables.get(table_key, [])
                     for row_data in rows:
-                        if model_cls is UserSetting and str(row_data.get("key", "")).lower() in SENSITIVE_SETTING_KEYS:
+                        if model_cls is UserSetting and _sensitive(str(row_data.get("key", ""))):
                             continue
                         coerced = BackupService._coerce_row_types(model_cls, row_data)
                         session.add(model_cls(**coerced))
@@ -212,12 +232,24 @@ class BackupService:
                 for assoc in tables.get("learning_goal_applications", []):
                     session.execute(learning_goal_applications.insert().values(**assoc))
 
-                for name in zf.namelist():
-                    if name.startswith("uploads/") and not name.endswith("/"):
-                        filename = name.split("uploads/", 1)[1]
-                        if filename and "/" not in filename and ".." not in filename:
-                            (UPLOADS_DIR / filename).write_bytes(zf.read(name))
+                for row in tables.get("documents", []):
+                    filename = row["stored_filename"]
+                    if not filename or any(x in filename for x in ("/", "\\", "..")):
+                        raise ValueError("Invalid attachment name in backup.")
+                    archive_name = f"uploads/{filename}"
+                    if archive_name not in zf.namelist():
+                        raise ValueError("Backup is missing an original attachment; restore cancelled.")
+                    session.add(DocumentContent(document_id=row["id"], content=zf.read(archive_name)))
 
+                # Explicit restored IDs do not advance PostgreSQL SERIAL sequences.
+                if session.bind.dialect.name == "postgresql":
+                    for table in Base.metadata.sorted_tables:
+                        if "id" in table.c and table.c.id.type.python_type is int:
+                            session.execute(text(
+                                f"SELECT setval(pg_get_serial_sequence('{table.name}', 'id'), "
+                                f"COALESCE((SELECT MAX(id) FROM {table.name}), 1), "
+                                f"EXISTS(SELECT 1 FROM {table.name}))"
+                            ))
                 session.commit()
                 return preview.get("table_counts", {})
             except Exception:

@@ -19,7 +19,7 @@ def render_applications_view(session: Session) -> None:
     cl_docs = {d.id: f"{d.title} ({d.version_label})" for d in docs if d.doc_type == "Cover Letter"}
 
     with st.expander(
-        "➕ Add New Application",
+        "Add New Application",
         expanded=bool(st.session_state.pop("open_new_app_form", False)),
     ):
         _render_application_create_form(session, cv_docs, cl_docs)
@@ -56,22 +56,22 @@ def render_applications_view(session: Session) -> None:
                     unsafe_allow_html=True,
                 )
                 meta_parts = [
-                    f"📍 {app.location or 'Unspecified'} ({app.work_arrangement})",
-                    f"💼 {app.employment_type}",
-                    f"⚡ Priority: {app.priority}",
+                    f" {app.location or 'Unspecified'} ({app.work_arrangement})",
+                    f" {app.employment_type}",
+                    f"Priority: {app.priority}",
                 ]
                 if app.salary_min or app.salary_max:
                     s_min = f"{app.salary_min:,.0f}" if app.salary_min else "?"
                     s_max = f"{app.salary_max:,.0f}" if app.salary_max else "?"
                     meta_parts.append(
-                        f"💶 {s_min} - {s_max} {app.currency} ({app.pay_period}, {app.tax_designation})"
+                        f" {s_min} - {s_max} {app.currency} ({app.pay_period}, {app.tax_designation})"
                     )
                 st.caption(" | ".join(meta_parts))
 
             with h_col2:
-                if st.button("🤖 Analyze w/ AI", key=f"ai_btn_{app.id}", use_container_width=True):
+                if st.button("Analyze w/ AI", key=f"ai_btn_{app.id}", width="stretch"):
                     navigate_to("AI Assistant", assistant_mode="Job analysis", selected_app_id=app.id)
-                if st.button("🗓️ Interviews", key=f"iv_btn_{app.id}", use_container_width=True):
+                if st.button("Interviews", key=f"iv_btn_{app.id}", width="stretch"):
                     navigate_to("Interviews", selected_app_id=app.id)
 
             tab_overview, tab_edit, tab_history, tab_contacts, tab_delete = st.tabs(
@@ -149,7 +149,7 @@ def render_applications_view(session: Session) -> None:
                     f"I confirm permanent deletion of {app.company} — {app.role}",
                     key=f"del_confirm_{app.id}",
                 )
-                if st.button("🗑️ Permanently Delete", key=f"del_btn_{app.id}", disabled=not confirm_del):
+                if st.button("Permanently Delete", key=f"del_btn_{app.id}", disabled=not confirm_del):
                     ApplicationService.delete_application(session, app.id)
                     st.success("Application deleted.")
                     st.rerun()
@@ -200,7 +200,7 @@ def _render_application_create_form(session: Session, cv_docs: dict, cl_docs: di
                 dups = ApplicationService.find_potential_duplicates(session, company, role, job_url)
                 if dups and not allow_duplicate:
                     st.warning(
-                        f"⚠️ Potential duplicate detected: {len(dups)} existing record(s) match this company/role or URL "
+                        f"Potential duplicate detected: {len(dups)} existing record(s) match this company/role or URL "
                         f"(e.g., {dups[0].company} — {dups[0].role}, Status: {dups[0].status}). "
                         "Check 'Save even if a similar application already exists' above if this is a legitimate repeat application."
                     )

@@ -24,6 +24,7 @@ from src.schemas import (
 from src.services.application_service import ApplicationService
 from src.services.learning_service import LearningService
 from src.services.document_service import DocumentService
+from src.services.firecrawl_service import FirecrawlService
 from src.services.ollama_service import OllamaService
 from src.services.request_guard import claim_request, finish_request
 from src.ui.helpers import get_active_ollama_model, get_active_ollama_base_url
@@ -42,12 +43,16 @@ ASSISTANT_MODES = [
 def render_assistant_view(session: Session) -> None:
     model_name = get_active_ollama_model(session)
     base_url = get_active_ollama_base_url(session)
-    ollama = OllamaService(base_url=base_url, model_name=model_name)
+    ollama = OllamaService(base_url=base_url, model_name=model_name,
+                           firecrawl_service=FirecrawlService(cache=st.session_state.setdefault("search_cache", {})))
 
-    st.title("Local Ollama Career & Learning Assistant")
+    st.title("Career & Learning Assistant")
     st.caption(
-        f"Powered locally by Ollama (`{model_name}` at `{base_url}`). No external LLM API key required."
+        f"Powered by Ollama (`{model_name}`). A small model can make mistakes; check important claims."
     )
+
+    if ollama.configuration_error:
+        st.error(ollama.configuration_error)
 
     # Mode and Context Selection
     apps = list(session.scalars(select(JobApplication).order_by(JobApplication.company.asc())).all())
@@ -131,13 +136,21 @@ def render_assistant_view(session: Session) -> None:
     sc_col1, sc_col2 = st.columns([3, 1])
     session_options = [None] + [s.id for s in existing_sessions]
     session_labels = {s.id: f"{s.title} ({len(s.messages)} msgs)" for s in existing_sessions}
+    session_key = f"chat_selection_{selected_mode}"
+    has_pending_chat = "_open_chat" in st.session_state
+    pending_chat = st.session_state.pop("_open_chat", None)
+    if has_pending_chat and pending_chat in session_options:
+        st.session_state[session_key] = pending_chat
+    if st.session_state.get(session_key) not in session_options:
+        st.session_state[session_key] = None
     active_session_id = sc_col1.selectbox(
         f"Saved '{selected_mode}' Sessions",
         session_options,
-        format_func=lambda x: "➕ Start New Session" if x is None else session_labels[x],
+        format_func=lambda x: "Start New Session" if x is None else session_labels[x],
+        key=session_key,
     )
-    if sc_col2.button("New Session", use_container_width=True):
-        active_session_id = None
+    if sc_col2.button("New Session", width="stretch"):
+        st.session_state["_open_chat"] = None
         st.rerun()
 
     current_chat_session = session.get(ChatSession, active_session_id) if active_session_id else None
@@ -147,7 +160,7 @@ def render_assistant_view(session: Session) -> None:
         for msg in current_chat_session.messages:
             with st.chat_message(msg.role):
                 if msg.was_context_truncated:
-                    st.warning("⚠️ Selected context exceeded the size limit and was partially truncated.")
+                    st.warning("Selected context exceeded the size limit and was partially truncated.")
                 st.markdown(msg.content)
                 message_metrics = st.session_state.get("ollama_message_metrics", {}).get(str(msg.id))
                 if message_metrics:
@@ -270,6 +283,13 @@ def _render_mode_prompt_box(
         with st.chat_message("assistant"):
             if failed_request.get("partial_text"):
                 st.markdown(failed_request["partial_text"])
+                st.download_button("Download incomplete response", failed_request["partial_text"],
+                                   file_name="incomplete_response.txt", key=f"partial_download_{mode}")
+                if st.button("Save as incomplete note", key=f"partial_save_{mode}"):
+                    LearningService.save_note(session=session, title=f"Incomplete AI response: {mode}",
+                                              content="[INCOMPLETE AI RESPONSE]\n" + failed_request["partial_text"],
+                                              origin="AI Saved Output")
+                    st.success("Saved as an explicitly incomplete note.")
             if failed_request.get("response_complete"):
                 st.warning("The response was generated but could not be saved. Use retry to try again.")
             else:
@@ -279,14 +299,15 @@ def _render_mode_prompt_box(
                 st.caption(_format_request_metrics(failed_request["metrics"]))
 
     with st.form(f"assistant_prompt_form_{mode}"):
-        response_depth = st.segmented_control(
+        response_depth = st.radio(
             "Response depth",
             options=["Quick", "Detailed"],
-            default="Quick",
+            index=0,
+            horizontal=True,
             key=f"assistant_response_depth_{mode}",
         )
         st.caption(
-            "Quick limits generation length for faster local inference on qwen2.5:0.5b; Detailed allows up to OLLAMA_OUTPUT_TOKENS."
+            "Quick limits generation length for faster inference on qwen2.5:0.5b; Detailed allows up to OLLAMA_OUTPUT_TOKENS."
         )
         source_options = [
             "My materials (no web search)",
@@ -300,7 +321,7 @@ def _render_mode_prompt_box(
             key=f"assistant_sources_{mode}",
         )
         st.caption(
-            "Local materials use zero external APIs. Web search modes use Firecrawl when FIRECRAWL_API_KEY is configured."
+            "Selected materials are sent to your configured Ollama server. Web search modes use Firecrawl when FIRECRAWL_API_KEY is configured."
         )
 
         if mode == "Tutor":
@@ -314,7 +335,7 @@ def _render_mode_prompt_box(
                 "cite supplied documents with page numbers when applicable, and end with one short follow-up question."
             )
         elif mode == "Quiz":
-            num_q = st.slider("Number of Questions", min_value=1, max_value=5, value=2)
+            num_q = st.slider("Number of Questions", min_value=1, max_value=5, value=1)
             user_input = st.text_input(
                 "Quiz Focus / Instructions",
                 value="Generate practice questions from the selected topic and reference materials.",
@@ -452,7 +473,7 @@ def _render_mode_prompt_box(
                 progress.update(label=stage, state="running")
 
             try:
-                with st.spinner(f"Running local Ollama ({ollama.model_name})", show_time=True):
+                with st.spinner(f"Running Ollama ({ollama.model_name})", show_time=True):
                     if mode == "Job analysis":
                         result = ollama.generate_structured(
                             user_input,
@@ -535,7 +556,7 @@ def _render_mode_prompt_box(
                         )
                     st.session_state["assistant_failed_request"] = {
                         **request_payload,
-                        "partial_text": result.text if mode in {"Tutor", "Mock interview"} else "",
+                        "partial_text": result.text,
                         "error_type": result.error_type or "invalid_structured_output",
                         "error_message": result.error_message or "The structured result did not pass validation.",
                         "response_complete": result.success,
@@ -599,6 +620,7 @@ def _render_mode_prompt_box(
                 session.flush()
                 assistant_message_id = assistant_message.id
                 session.commit()
+                st.session_state["_open_chat"] = chat_session.id
                 finish_request(request_states, req_hash, success=True)
                 st.session_state.pop("assistant_retry_payload", None)
                 st.session_state.pop("assistant_failed_request", None)
@@ -610,7 +632,7 @@ def _render_mode_prompt_box(
                 session.rollback()
                 finish_request(request_states, req_hash, success=False)
                 st.session_state["assistant_retry_payload"] = request_payload
-                error_message = f"Could not save the Ollama result: {type(exc).__name__}: {exc}"
+                error_message = "The response could not be saved. Check database availability; download the preserved text before retrying."
                 st.session_state["assistant_failed_request"] = {
                     **request_payload,
                     "partial_text": (
@@ -682,13 +704,13 @@ def _format_structured_result_to_markdown(mode: str, result) -> str:
                 f"  - *Source:* {sb.source_quote_or_reason}\n"
                 f"  - *Profile Match (`{sb.profile_evidence_status}`):* {sb.profile_evidence_detail}"
             )
-        lines.append("### Unknowns & Unverified Gaps\n" + ("\n".join(f"- ❓ {u}" for u in data.unknowns_and_gaps) or "- None"))
+        lines.append("### Unknowns & Unverified Gaps\n" + ("\n".join(f"-  {u}" for u in data.unknowns_and_gaps) or "- None"))
         return "\n\n".join(lines)
 
     if mode == "Quiz" and isinstance(data, QuizGenerationOutput):
         lines = [f"### Generated Quiz: {data.topic_summary}"]
         if data.unsupported_material_notice:
-            lines.append(f"> ⚠️ **Material Notice:** {data.unsupported_material_notice}")
+            lines.append(f">  **Material Notice:** {data.unsupported_material_notice}")
         lines.append(
             f"*{len(data.questions)} question(s) generated. Click **Save Quiz to Learning Hub** below to take the quiz with hidden answers.*"
         )
@@ -706,11 +728,11 @@ def _format_structured_result_to_markdown(mode: str, result) -> str:
 
     if mode == "Answer coach" and isinstance(data, AnswerCoachOutput):
         lines = [
-            "### Strengths in Your Draft\n" + "\n".join(f"- ✅ {s}" for s in data.critique_strengths),
-            "### Gaps to Address\n" + "\n".join(f"- 🔍 {g}" for g in data.critique_gaps),
+            "### Strengths in Your Draft\n" + "\n".join(f"-  {s}" for s in data.critique_strengths),
+            "### Gaps to Address\n" + "\n".join(f"-  {g}" for g in data.critique_gaps),
             f"### Improved Draft (Strictly Preserving Your Experience)\n{data.improved_draft}",
             "### Clarifying Details You Can Add (No Invented Facts)\n"
-            + ("\n".join(f"- ❓ {u}" for u in data.unverified_placeholders_needed) or "- None"),
+            + ("\n".join(f"-  {u}" for u in data.unverified_placeholders_needed) or "- None"),
         ]
         return "\n\n".join(lines)
 
@@ -726,7 +748,7 @@ def _render_message_actions(
     goal_id: int | None,
 ) -> None:
     col_a, col_b = st.columns([1, 3])
-    if col_a.button("📝 Save Response as Note", key=f"save_note_msg_{msg.id}"):
+    if col_a.button("Save Response as Note", key=f"save_note_msg_{msg.id}"):
         LearningService.save_note(
             session=session,
             title=f"AI {mode} Note ({msg.created_at.strftime('%Y-%m-%d %H:%M')})",
@@ -749,7 +771,7 @@ def _render_message_actions(
     # Proposed Tasks Review & Explicit Save
     proposed_tasks = raw.get("proposed_tasks", [])
     if proposed_tasks:
-        with st.expander(f"📋 Review & Save Proposed Tasks ({len(proposed_tasks)})"):
+        with st.expander(f"Review & Save Proposed Tasks ({len(proposed_tasks)})"):
             st.caption("AI suggestions are never saved automatically. Review and click to save individual tasks:")
             for idx, pt in enumerate(proposed_tasks):
                 c1, c2 = st.columns([4, 1])
@@ -772,7 +794,7 @@ def _render_message_actions(
     # Job Analysis Skill Links Proposal
     skill_breakdown = raw.get("skill_breakdown", [])
     if skill_breakdown and app_id:
-        with st.expander(f"🔗 Link Extracted Skills to Application ({len(skill_breakdown)})"):
+        with st.expander(f"Link Extracted Skills to Application ({len(skill_breakdown)})"):
             st.caption("Explicitly confirm which extracted skills to link to this application record:")
             if st.button("Save Extracted Skills to Application", key=f"link_skills_msg_{msg.id}"):
                 for sb in skill_breakdown:
@@ -789,7 +811,7 @@ def _render_message_actions(
     # Quiz Questions Save
     quiz_questions = raw.get("questions", [])
     if quiz_questions:
-        if col_b.button("🎯 Save Quiz Questions to Learning Hub", key=f"save_quiz_msg_{msg.id}"):
+        if col_b.button("Save Quiz Questions to Learning Hub", key=f"save_quiz_msg_{msg.id}"):
             for q in quiz_questions:
                 LearningService.create_quiz_question(
                     session=session,

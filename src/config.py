@@ -2,10 +2,29 @@ import os
 from pathlib import Path
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
-from dotenv import load_dotenv
+from dotenv import dotenv_values
+from sqlalchemy.engine import make_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / ".env", override=True)
+# Precedence: Streamlit secrets > process environment > local .env > defaults.
+_LOCAL_ENV = dotenv_values(BASE_DIR / ".env")
+
+
+def setting(name: str, default: str = "") -> str:
+    try:
+        import streamlit as st
+        value = st.secrets.get(name)
+        if value is not None:
+            return str(value)
+    except FileNotFoundError:
+        pass
+    return str(os.environ.get(name, _LOCAL_ENV.get(name) or default))
+
+
+def is_cloud() -> bool:
+    # Fail closed unless local operation was explicitly selected.
+    return setting("APP_ENV", "cloud").lower() != "local"
+
 
 DATA_DIR = BASE_DIR / "data"
 UPLOADS_DIR = DATA_DIR / "uploads"
@@ -71,50 +90,60 @@ class AppConfig:
     @classmethod
     def get_database_url(cls) -> str:
         default_db = f"sqlite:///{(DATA_DIR / 'career_companion.db').as_posix()}"
-        return os.getenv("DATABASE_URL", default_db)
+        url = setting("DATABASE_URL", default_db)
+        if url.startswith("postgres://"):
+            url = "postgresql+psycopg://" + url[len("postgres://"):]
+        elif url.startswith("postgresql://"):
+            url = "postgresql+psycopg://" + url[len("postgresql://"):]
+        parsed = make_url(url)
+        if parsed.get_backend_name() == "sqlite" and parsed.database not in (None, "", ":memory:"):
+            path = Path(parsed.database)
+            if not path.is_absolute():
+                url = parsed.set(database=str(BASE_DIR / path)).render_as_string(hide_password=False)
+        return url
 
     @classmethod
     def get_ai_provider(cls) -> str:
-        return os.getenv("AI_PROVIDER", cls.DEFAULT_AI_PROVIDER).strip().lower() or cls.DEFAULT_AI_PROVIDER
+        return setting("AI_PROVIDER", cls.DEFAULT_AI_PROVIDER).strip().lower() or cls.DEFAULT_AI_PROVIDER
 
     @classmethod
     def get_ollama_base_url(cls) -> str:
-        url = os.getenv("OLLAMA_BASE_URL", cls.DEFAULT_OLLAMA_BASE_URL).strip() or cls.DEFAULT_OLLAMA_BASE_URL
+        url = setting("OLLAMA_BASE_URL", cls.DEFAULT_OLLAMA_BASE_URL).strip() or cls.DEFAULT_OLLAMA_BASE_URL
         return url.rstrip("/")
 
     @classmethod
     def get_ollama_model(cls) -> str:
-        return os.getenv("OLLAMA_MODEL", cls.DEFAULT_OLLAMA_MODEL).strip() or cls.DEFAULT_OLLAMA_MODEL
+        return setting("OLLAMA_MODEL", cls.DEFAULT_OLLAMA_MODEL).strip() or cls.DEFAULT_OLLAMA_MODEL
 
     @classmethod
     def get_ollama_keep_alive(cls) -> str:
-        return os.getenv("OLLAMA_KEEP_ALIVE", cls.DEFAULT_OLLAMA_KEEP_ALIVE).strip() or cls.DEFAULT_OLLAMA_KEEP_ALIVE
+        return setting("OLLAMA_KEEP_ALIVE", cls.DEFAULT_OLLAMA_KEEP_ALIVE).strip() or cls.DEFAULT_OLLAMA_KEEP_ALIVE
 
     @classmethod
     def get_ollama_num_ctx(cls) -> int:
         try:
-            val = int(os.getenv("OLLAMA_NUM_CTX", str(cls.DEFAULT_OLLAMA_NUM_CTX)))
+            val = int(setting("OLLAMA_NUM_CTX", str(cls.DEFAULT_OLLAMA_NUM_CTX)))
         except ValueError:
             val = cls.DEFAULT_OLLAMA_NUM_CTX
-        return max(1024, val)
+        return max(1024, min(32768, val))
 
     @classmethod
     def get_ollama_output_tokens(cls) -> int:
         try:
-            val = int(os.getenv("OLLAMA_OUTPUT_TOKENS", str(cls.DEFAULT_OLLAMA_OUTPUT_TOKENS)))
+            val = int(setting("OLLAMA_OUTPUT_TOKENS", str(cls.DEFAULT_OLLAMA_OUTPUT_TOKENS)))
         except ValueError:
             val = cls.DEFAULT_OLLAMA_OUTPUT_TOKENS
-        return max(128, val)
+        return max(128, min(val, cls.get_ollama_num_ctx() // 2))
 
     @classmethod
     def get_ollama_timeout_ms(cls) -> int:
-        raw_ms = os.getenv("OLLAMA_TIMEOUT_MS", "").strip()
+        raw_ms = setting("OLLAMA_TIMEOUT_MS", "").strip()
         if raw_ms:
             try:
                 return max(5000, int(raw_ms))
             except ValueError:
                 pass
-        raw_first = os.getenv("OLLAMA_FIRST_TIMEOUT", "").strip()
+        raw_first = setting("OLLAMA_FIRST_TIMEOUT", "").strip()
         if raw_first:
             try:
                 return max(5000, int(float(raw_first) * 1000))
@@ -125,7 +154,7 @@ class AppConfig:
     @classmethod
     def get_ollama_connect_timeout(cls) -> float:
         try:
-            return max(1.0, float(os.getenv("OLLAMA_CONNECT_TIMEOUT", "5")))
+            return max(1.0, float(setting("OLLAMA_CONNECT_TIMEOUT", "5")))
         except ValueError:
             return 5.0
 
@@ -136,14 +165,14 @@ class AppConfig:
     @classmethod
     def get_ollama_total_timeout(cls) -> float:
         try:
-            total = float(os.getenv("OLLAMA_TOTAL_TIMEOUT", "300"))
-            return max(cls.get_ollama_read_timeout(), total)
+            total = float(setting("OLLAMA_TOTAL_TIMEOUT", "300"))
+            return max(1.0, total)
         except ValueError:
-            return max(cls.get_ollama_read_timeout(), 300.0)
+            return 300.0
 
     @classmethod
     def get_firecrawl_api_key(cls) -> str | None:
-        key = os.getenv("FIRECRAWL_API_KEY", "").strip()
+        key = setting("FIRECRAWL_API_KEY", "").strip()
         placeholders = {
             "",
             "your_firecrawl_api_key_here",
@@ -157,27 +186,27 @@ class AppConfig:
     @classmethod
     def get_firecrawl_timeout(cls) -> float:
         try:
-            return max(5.0, float(os.getenv("FIRECRAWL_TIMEOUT", "30")))
+            return max(5.0, float(setting("FIRECRAWL_TIMEOUT", "30")))
         except ValueError:
             return 30.0
 
     @classmethod
     def get_search_max_results(cls) -> int:
         try:
-            return max(1, min(10, int(os.getenv("SEARCH_MAX_RESULTS", "3"))))
+            return max(1, min(10, int(setting("SEARCH_MAX_RESULTS", "3"))))
         except ValueError:
             return 3
 
     @classmethod
     def get_search_cache_ttl_seconds(cls) -> int:
         try:
-            return max(0, int(os.getenv("SEARCH_CACHE_TTL_SECONDS", "3600")))
+            return max(0, int(setting("SEARCH_CACHE_TTL_SECONDS", "3600")))
         except ValueError:
             return 3600
 
     @classmethod
     def get_default_timezone(cls) -> str:
-        tz_name = os.getenv("APP_TIMEZONE", cls.DEFAULT_TIMEZONE).strip()
+        tz_name = setting("APP_TIMEZONE", cls.DEFAULT_TIMEZONE).strip()
         try:
             ZoneInfo(tz_name)
             return tz_name
@@ -187,7 +216,7 @@ class AppConfig:
     @classmethod
     def get_max_upload_bytes(cls) -> int:
         try:
-            mb = int(os.getenv("MAX_UPLOAD_SIZE_MB", "15"))
+            mb = int(setting("MAX_UPLOAD_SIZE_MB", "15"))
         except ValueError:
             mb = 15
         return max(1, mb) * 1024 * 1024
@@ -195,7 +224,7 @@ class AppConfig:
     @classmethod
     def get_max_context_chars(cls) -> int:
         try:
-            chars = int(os.getenv("MAX_CONTEXT_CHARS", "6000"))
+            chars = int(setting("MAX_CONTEXT_CHARS", "6000"))
         except ValueError:
             chars = 6000
         # Keep context proportional to the 0.5B model's context window

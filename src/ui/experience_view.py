@@ -13,7 +13,7 @@ def render_experience_view(session: Session) -> None:
         "and STAR behavioral stories so the AI Assistant can ground interview preparation without inventing facts."
     )
 
-    with st.expander("➕ Add Entry to Experience Bank", expanded=False):
+    with st.expander("Add Entry to Experience Bank", expanded=False):
         with st.form("add_experience_entry_form"):
             c1, c2, c3 = st.columns(3)
             category = c1.selectbox(
@@ -97,7 +97,7 @@ def render_experience_view(session: Session) -> None:
                     f"- **Action:** {entry.action or '—'}\n"
                     f"- **Result:** {entry.result or '—'}"
                 )
-            if st.button("🗑️ Delete Entry", key=f"del_exp_{entry.id}"):
+            if st.button("Delete Entry", key=f"del_exp_{entry.id}"):
                 session.delete(entry)
                 session.commit()
                 st.rerun()

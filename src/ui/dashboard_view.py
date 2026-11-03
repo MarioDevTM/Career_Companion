@@ -21,20 +21,20 @@ def render_dashboard_view(session: Session) -> None:
     today = date.today()
     now_utc = datetime.now(timezone.utc)
 
-    st.title("Career Companion Dashboard")
+    st.title("Overview")
     st.caption(
-        "Save a job → identify requirements → choose preparation goals → study & practice → record interview outcomes → adjust future preparation."
+        "Your applications, upcoming interviews, and preparation priorities."
     )
 
     # Quick Actions Bar
     qa_col1, qa_col2, qa_col3, qa_col4 = st.columns(4)
-    if qa_col1.button("➕ Add Application", use_container_width=True, type="primary"):
+    if qa_col1.button("Add Application", width="stretch", type="primary"):
         navigate_to("Applications", open_new_app_form=True)
-    if qa_col2.button("🗓️ Log Interview", use_container_width=True):
+    if qa_col2.button("Log Interview", width="stretch"):
         navigate_to("Interviews")
-    if qa_col3.button("⏱️ Start Study Session", use_container_width=True):
-        navigate_to("Learning", learning_tab="Study & Sessions")
-    if qa_col4.button("✨ Open AI Assistant", use_container_width=True):
+    if qa_col3.button("Start Study Session", width="stretch"):
+        navigate_to("Learning", learning_tab="Study Sessions, Notes & Tasks")
+    if qa_col4.button("Open AI Assistant", width="stretch"):
         navigate_to("AI Assistant")
 
     all_apps = list(
@@ -87,11 +87,11 @@ def render_dashboard_view(session: Session) -> None:
     )
 
     m1, m2, m3, m4, m5 = st.columns(5)
-    m1.metric("Active Applications", len(active_apps))
-    m2.metric("Upcoming Interviews", len(upcoming_interviews))
-    m3.metric("Follow-ups Due/Overdue", len(followups_due))
-    m4.metric("Tasks Due Today/Overdue", len(tasks_due_today))
-    m5.metric("Revisions Due", len(revisions_due))
+    m1.metric("Active Applications", len(active_apps), border=True)
+    m2.metric("Upcoming Interviews", len(upcoming_interviews), border=True)
+    m3.metric("Follow-ups due", len(followups_due), border=True)
+    m4.metric("Tasks due", len(tasks_due_today), border=True)
+    m5.metric("Revisions Due", len(revisions_due), border=True)
 
     st.divider()
 
@@ -106,7 +106,7 @@ def render_dashboard_view(session: Session) -> None:
                 badge = render_status_badge(app.status)
                 due_str = ""
                 if app.next_action_due:
-                    overdue_tag = "⚠️ OVERDUE" if app.next_action_due < today else "📅 Due"
+                    overdue_tag = "OVERDUE" if app.next_action_due < today else "Due"
                     due_str = f" — **{overdue_tag} ({app.next_action_due})**: {app.next_action or 'Follow up'}"
                 st.markdown(
                     f"**{app.company}** — {app.role} {badge}{due_str}",
@@ -155,9 +155,9 @@ def render_dashboard_view(session: Session) -> None:
             for ev in recent_events:
                 app_label = f"{ev.application.company} ({ev.application.role})" if ev.application else f"App #{ev.application_id}"
                 st.markdown(
-                    f"- 🔄 **{app_label}** → `{ev.new_status}` ({format_dt_in_tz(ev.changed_at, tz_name)})"
+                    f"-  **{app_label}** → `{ev.new_status}` ({format_dt_in_tz(ev.changed_at, tz_name)})"
                 )
             for ss in recent_sessions:
                 st.markdown(
-                    f"- 📚 **Study Session**: {ss.duration_minutes} min ({ss.activity_type}) — `{format_dt_in_tz(ss.logged_at, tz_name)}`"
+                    f"-  **Study Session**: {ss.duration_minutes} min ({ss.activity_type}) — `{format_dt_in_tz(ss.logged_at, tz_name)}`"
                 )

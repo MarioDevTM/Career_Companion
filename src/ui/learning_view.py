@@ -32,7 +32,8 @@ def render_learning_view(session: Session) -> None:
             "Study Sessions, Notes & Tasks",
             "Practice Quizzes",
             "Flashcards & Revision Schedule",
-        ]
+        ],
+        default=st.session_state.pop("learning_tab", "Topics & Skills")
     )
 
     skills = list(session.scalars(select(Skill).order_by(Skill.name.asc())).all())
@@ -45,7 +46,7 @@ def render_learning_view(session: Session) -> None:
 
     # TAB 1: Topics & Skills
     with tabs[0]:
-        with st.expander("➕ Add or Update Skill / Topic", expanded=not bool(skills)):
+        with st.expander("Add or Update Skill / Topic", expanded=not bool(skills)):
             with st.form("skill_form"):
                 sc1, sc2, sc3 = st.columns([2, 1, 1])
                 s_name = sc1.text_input("Skill / Topic Name *", placeholder="e.g., SQLAlchemy 2.0, AWS IAM, System Design")
@@ -63,7 +64,7 @@ def render_learning_view(session: Session) -> None:
             st.info("No skills tracked yet.")
         else:
             st.info(
-                "💡 **Mastery Policy:** Reading a note or passing a single quiz never marks a skill as Mastered. "
+                " **Mastery Policy:** Reading a note or passing a single quiz never marks a skill as Mastered. "
                 "A skill reaches *Demonstrated Proficiency* only after at least **3 quiz attempts** with **80%+ accuracy** and **60+ minutes** of logged study."
             )
             for s in skills:
@@ -78,7 +79,7 @@ def render_learning_view(session: Session) -> None:
 
     # TAB 2: Learning Goals & Resources
     with tabs[1]:
-        with st.expander("➕ Create Learning or Certification Goal", expanded=not bool(goals)):
+        with st.expander("Create Learning or Certification Goal", expanded=not bool(goals)):
             with st.form("learning_goal_form"):
                 gc1, gc2, gc3 = st.columns([2, 1, 1])
                 g_title = gc1.text_input("Goal Title *", placeholder="e.g., AWS Certified Developer Exam or Backend Interview Prep")
@@ -218,7 +219,7 @@ def render_learning_view(session: Session) -> None:
 
             notes = list(session.scalars(select(NoteItem).order_by(NoteItem.created_at.desc())).all())
             for note in notes:
-                with st.expander(f"📝 {note.title} ({note.origin})"):
+                with st.expander(f" {note.title} ({note.origin})"):
                     st.markdown(render_origin_badge(note.origin), unsafe_allow_html=True)
                     st.markdown(note.content)
 
@@ -228,7 +229,7 @@ def render_learning_view(session: Session) -> None:
         st.caption(
             "Correct answers and explanations remain strictly hidden until you submit your answer."
         )
-        with st.expander("➕ Create Custom Quiz Question"):
+        with st.expander("Create Custom Quiz Question"):
             with st.form("manual_quiz_form"):
                 q_skill = st.selectbox(
                     "Skill",
@@ -284,13 +285,13 @@ def render_learning_view(session: Session) -> None:
                     if qq.id in submitted_map:
                         res = submitted_map[qq.id]
                         if res["is_correct"]:
-                            st.success(f"✅ Correct! Answer: **{opts[qq.correct_option_index]}**")
+                            st.success(f"Correct! Answer: **{opts[qq.correct_option_index]}**")
                         else:
                             st.error(
-                                f"❌ Incorrect. Correct Answer: **{opts[qq.correct_option_index]}**"
+                                f"Incorrect. Correct Answer: **{opts[qq.correct_option_index]}**"
                             )
                             if qq.suggested_revisit_topic:
-                                st.warning(f"📌 Suggested topic to revisit: **{qq.suggested_revisit_topic}**")
+                                st.warning(f"Suggested topic to revisit: **{qq.suggested_revisit_topic}**")
                         st.markdown(f"**Explanation:** {qq.explanation}")
                         if qq.source_citation:
                             st.caption(f"Source: {qq.source_citation}")
@@ -305,7 +306,7 @@ def render_learning_view(session: Session) -> None:
             "You can also manually reschedule any item."
         )
 
-        with st.expander("➕ Add Flashcard / Revision Question"):
+        with st.expander("Add Flashcard / Revision Question"):
             with st.form("create_revision_form"):
                 rv_skill = st.selectbox(
                     "Skill",
@@ -330,7 +331,7 @@ def render_learning_view(session: Session) -> None:
 
         for rev in revisions:
             is_due = rev.next_review_date <= date.today()
-            due_badge = "🔥 **DUE NOW**" if is_due else f"📅 Scheduled: `{rev.next_review_date}`"
+            due_badge = " **DUE NOW**" if is_due else f"Scheduled: `{rev.next_review_date}`"
             with st.container(border=True):
                 st.markdown(
                     f"{due_badge} | Stage {rev.stage_index + 1} (`{rev.interval_days}d` interval) | Reviews: {rev.review_count}"
@@ -347,15 +348,15 @@ def render_learning_view(session: Session) -> None:
                 if rev.id in revealed_cards:
                     st.info(f"**Answer:** {rev.answer_back}")
                     b1, b2, b3 = st.columns(3)
-                    if b1.button("😓 Hard (Reset to 1d)", key=f"rev_hard_{rev.id}", use_container_width=True):
+                    if b1.button("Hard (Reset to 1d)", key=f"rev_hard_{rev.id}", width="stretch"):
                         LearningService.record_revision_review(session, rev.id, "Hard")
                         revealed_cards.discard(rev.id)
                         st.rerun()
-                    if b2.button("👍 Good (+1 Stage)", key=f"rev_good_{rev.id}", use_container_width=True):
+                    if b2.button("Good (+1 Stage)", key=f"rev_good_{rev.id}", width="stretch"):
                         LearningService.record_revision_review(session, rev.id, "Good")
                         revealed_cards.discard(rev.id)
                         st.rerun()
-                    if b3.button("🚀 Easy (+2 Stages)", key=f"rev_easy_{rev.id}", use_container_width=True):
+                    if b3.button("Easy (+2 Stages)", key=f"rev_easy_{rev.id}", width="stretch"):
                         LearningService.record_revision_review(session, rev.id, "Easy")
                         revealed_cards.discard(rev.id)
                         st.rerun()

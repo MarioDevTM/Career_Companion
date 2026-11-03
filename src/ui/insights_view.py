@@ -18,7 +18,7 @@ def render_insights_view(session: Session) -> None:
 
     if app_metrics["small_sample_warning"]:
         st.warning(
-            f"⚠️ **Small Sample Notice:** You currently have **{app_metrics['submitted_applications_denominator']}** "
+            f" **Small Sample Notice:** You currently have **{app_metrics['submitted_applications_denominator']}** "
             "submitted application(s) (excluding saved-only roles). Conversion percentages require a larger sample size for meaningful conclusions."
         )
 
@@ -55,7 +55,7 @@ def render_insights_view(session: Session) -> None:
                 [{"Status": k, "Count": v} for k, v in status_dist.items()]
             )
             fig_status = px.bar(df_status, x="Status", y="Count", color="Status")
-            st.plotly_chart(fig_status, use_container_width=True)
+            st.plotly_chart(fig_status, width="stretch")
         else:
             st.caption("No application data available.")
 
@@ -66,7 +66,7 @@ def render_insights_view(session: Session) -> None:
                 [{"Source": k, "Count": v} for k, v in source_dist.items()]
             )
             fig_source = px.pie(df_source, names="Source", values="Count", hole=0.4)
-            st.plotly_chart(fig_source, use_container_width=True)
+            st.plotly_chart(fig_source, width="stretch")
 
     with col2:
         st.subheader("Applications Over Time")
@@ -74,7 +74,7 @@ def render_insights_view(session: Session) -> None:
         if not t_df.empty:
             grouped = t_df.groupby("date").size().reset_index(name="Applications")
             fig_time = px.line(grouped, x="date", y="Applications", markers=True)
-            st.plotly_chart(fig_time, use_container_width=True)
+            st.plotly_chart(fig_time, width="stretch")
         else:
             st.caption("No dated applications to plot.")
 
@@ -83,7 +83,7 @@ def render_insights_view(session: Session) -> None:
         if top_skills:
             df_skills = pd.DataFrame(top_skills, columns=["Skill", "Job Count"])
             fig_skills = px.bar(df_skills, x="Job Count", y="Skill", orientation="h")
-            st.plotly_chart(fig_skills, use_container_width=True)
+            st.plotly_chart(fig_skills, width="stretch")
         else:
             st.caption("No skills linked to applications yet.")
 
@@ -94,7 +94,7 @@ def render_insights_view(session: Session) -> None:
         s_df = learn_metrics["study_df"]
         if not s_df.empty:
             fig_study = px.bar(s_df, x="date", y="minutes", color="skill", title="Study Minutes by Date & Skill")
-            st.plotly_chart(fig_study, use_container_width=True)
+            st.plotly_chart(fig_study, width="stretch")
         else:
             st.caption("No study sessions logged yet.")
 
@@ -110,6 +110,6 @@ def render_insights_view(session: Session) -> None:
                 range_y=[0, 100],
                 title="Quiz Accuracy (%) by Skill",
             )
-            st.plotly_chart(fig_quiz, use_container_width=True)
+            st.plotly_chart(fig_quiz, width="stretch")
         else:
             st.caption("No quiz attempts recorded yet.")

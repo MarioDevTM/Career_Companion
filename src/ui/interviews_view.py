@@ -33,7 +33,7 @@ def render_interviews_view(session: Session) -> None:
         format_func=lambda x: app_map[x],
     )
 
-    with st.expander("➕ Log / Schedule Interview for This Application", expanded=False):
+    with st.expander("Log / Schedule Interview for This Application", expanded=False):
         with st.form("create_interview_form"):
             c1, c2, c3, c4 = st.columns(4)
             iv_date = c1.date_input("Interview Date", value=date.today())

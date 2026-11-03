@@ -63,7 +63,7 @@ def test_firecrawl_failure_in_web_only_mode_reports_firecrawl_error_without_call
 
     result = service.generate_text("Search latest news", web_search=True, require_web_only=True)
     assert result.success is False
-    assert result.error_type == "firecrawl_http_error"
+    assert result.error_type == "firecrawl_authentication"
     assert len(ollama_http.post_calls) == 0
 
 

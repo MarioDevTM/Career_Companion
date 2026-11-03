@@ -16,7 +16,7 @@ def render_documents_view(session: Session) -> None:
         "Files are stored with safe generated filenames, and text extraction reports scanned/unreadable files transparently."
     )
 
-    with st.expander("📤 Upload New Document or Version", expanded=True):
+    with st.expander("Upload New Document or Version", expanded=True):
         with st.form("upload_document_form"):
             c1, c2, c3 = st.columns([2, 1, 1])
             title = c1.text_input("Document Title *", placeholder="e.g., Backend Python CV")
@@ -59,7 +59,7 @@ def render_documents_view(session: Session) -> None:
             c1, c2 = st.columns([4, 1])
             c1.subheader(f"{doc.title} — `{doc.version_label}` [{doc.doc_type}]")
             c1.caption(
-                f"Original file: `{doc.original_filename}` | Safe stored name: `{doc.stored_filename}` | "
+                f"Original file: `{doc.original_filename}` | "
                 f"Size: {doc.file_size_bytes / 1024:.1f} KB | Uploaded: {format_dt_in_tz(doc.created_at, tz_name)}"
             )
             if doc.extraction_status == "success":
@@ -71,6 +71,13 @@ def render_documents_view(session: Session) -> None:
                 with st.expander("Preview Extracted Text & Page Markers"):
                     st.text(doc.extracted_text[:4000] + ("\n... [Preview Truncated]" if len(doc.extracted_text) > 4000 else ""))
 
-            if c2.button("🗑️ Delete", key=f"del_doc_{doc.id}"):
+            try:
+                original_bytes = DocumentService.read_bytes(session, doc)
+                c2.download_button("Download", original_bytes, file_name=doc.original_filename,
+                                   key=f"download_doc_{doc.id}", width="stretch")
+            except FileNotFoundError:
+                c2.warning("Original attachment missing from legacy uploads.")
+
+            if c2.button("Delete", key=f"del_doc_{doc.id}"):
                 DocumentService.delete_document(session, doc.id)
                 st.rerun()

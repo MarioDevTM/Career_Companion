@@ -8,7 +8,7 @@ import docx
 from sqlalchemy.orm import Session
 
 from src.config import AppConfig, UPLOADS_DIR
-from src.models import Document
+from src.models import Document, DocumentContent
 
 
 class DocumentService:
@@ -37,8 +37,6 @@ class DocumentService:
             )
 
         safe_stored_name = f"{uuid.uuid4().hex}{ext}"
-        target_path = UPLOADS_DIR / safe_stored_name
-        target_path.write_bytes(file_bytes)
 
         extracted_text, page_map, status, warning = DocumentService.extract_text_and_pages(
             file_bytes, ext
@@ -58,6 +56,8 @@ class DocumentService:
             extraction_warning=warning,
         )
         session.add(doc)
+        session.flush()
+        session.add(DocumentContent(document_id=doc.id, content=file_bytes))
         session.commit()
         session.refresh(doc)
         return doc
@@ -137,11 +137,20 @@ class DocumentService:
         doc = session.get(Document, document_id)
         if not doc:
             return
-        file_path = UPLOADS_DIR / doc.stored_filename
-        if file_path.exists():
-            try:
-                file_path.unlink()
-            except OSError:
-                pass
+        content = session.get(DocumentContent, doc.id)
+        if content:
+            session.delete(content)
+            session.flush()
         session.delete(doc)
         session.commit()
+
+
+    @staticmethod
+    def read_bytes(session: Session, doc: Document) -> bytes:
+        stored = session.get(DocumentContent, doc.id)
+        if stored is not None:
+            return stored.content
+        # Read legacy uploads without rewriting or deleting their files.
+        if Path(doc.stored_filename).name != doc.stored_filename or "\\" in doc.stored_filename:
+            raise ValueError("Invalid stored attachment name.")
+        return (UPLOADS_DIR / doc.stored_filename).read_bytes()

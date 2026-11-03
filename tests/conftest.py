@@ -26,3 +26,9 @@ def db_session(tmp_path, monkeypatch):
     finally:
         session.close()
         engine.dispose()
+
+
+@pytest.fixture(autouse=True)
+def local_test_environment(monkeypatch):
+    monkeypatch.setenv("APP_ENV", "local")
+    monkeypatch.setenv("AI_PROVIDER", "ollama")

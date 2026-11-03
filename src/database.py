@@ -1,4 +1,6 @@
 from contextlib import contextmanager
+import sqlite3
+from sqlalchemy.engine import make_url
 from typing import Generator
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
@@ -10,6 +12,8 @@ from src.models import Base, UserSetting
 
 @event.listens_for(Engine, "connect")
 def _set_sqlite_pragma(dbapi_connection, connection_record):
+    if not isinstance(dbapi_connection, sqlite3.Connection):
+        return
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
@@ -23,9 +27,11 @@ _OLLAMA_MIGRATION_KEY = "ollama_migration_v1"
 def get_engine(database_url: str | None = None):
     global _engine
     url = database_url or AppConfig.get_database_url()
-    if _engine is None or str(_engine.url) != url:
+    if _engine is None or _engine.url != make_url(url):
         connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
-        _engine = create_engine(url, connect_args=connect_args, future=True)
+        if _engine is not None:
+            _engine.dispose()
+        _engine = create_engine(url, connect_args=connect_args, future=True, pool_pre_ping=True)
     return _engine
 
 
