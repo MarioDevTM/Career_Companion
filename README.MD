@@ -4,7 +4,7 @@
 
 Career Companion is a private, Python-based workspace for organizing a job search and the learning that supports it. Instead of keeping applications, interview notes, CV versions, study plans, and practice questions in separate tools, it brings them together in one Streamlit application. An optional Ollama-powered assistant uses selected records and documents as context for focused preparation.
 
-**Workflow:** Discover opportunities -> Track applications -> Identify requirements -> Prepare for interviews -> Develop skills -> Review progress.
+**Workflow:** Discover opportunities → Track applications → Identify requirements → Prepare for interviews → Develop skills → Review progress.
 
 **Deployed instance:** [careercomp.streamlit.app](https://careercomp.streamlit.app/) — a **private, owner-restricted workspace**, not a public sign-up service. To use Career Companion yourself, run it locally or deploy your own independent instance using the instructions below.
 
@@ -33,28 +33,28 @@ Career Companion is a private, Python-based workspace for organizing a job searc
 
 **Workspace overview** — quick actions, active applications, interviews, follow-ups, study tasks, and recent activity.
 
-![Career Companion dashboard with application and preparation summaries](docs/screenshots/dashboard.jpg)
+\!\[Career Companion dashboard with application and preparation summaries\]\(docs/screenshots/dashboard.jpg\)
 
-<details>
-<summary>Explore more screenshots</summary>
+\<details\>
+\<summary\>Explore more screenshots\</summary\>
 
 | Job applications | Interview preparation |
 | --- | --- |
-| ![Application tracking and status controls](applications.jpg) | ![Interview record and checklist](docs/screenshots/interviews.jpg) |
+| \!\[Application tracking and status controls\]\(docs/screenshots/applications.jpg\) | \!\[Interview record and checklist\]\(docs/screenshots/interviews.jpg\) |
 
 | Learning and revision | Context-aware AI assistant |
 | --- | --- |
-| ![Learning goals, quiz performance, and proficiency status](docs/screenshots/learning.jpg) | ![AI assistant with mode and context selection](docs/screenshots/assistant.jpg) |
+| \!\[Learning goals, quiz performance, and proficiency status\]\(docs/screenshots/learning.jpg\) | \!\[AI assistant with mode and context selection\]\(docs/screenshots/assistant.jpg\) |
 
 | Experience Bank | Documents |
 | --- | --- |
-| ![Professional experience records with evidence and competency tags](docs/screenshots/experience.jpg) | ![Document upload and version form](docs/screenshots/documents.jpg) |
+| \!\[Professional experience records with evidence and competency tags\]\(docs/screenshots/experience.jpg\) | \!\[Document upload and version form\]\(docs/screenshots/documents.jpg\) |
 
 | Insights | Configuration and diagnostics |
 | --- | --- |
-| ![Application conversion and analytics dashboard](docs/screenshots/insights.jpg) | ![Ollama endpoint settings and live connectivity check](docs/screenshots/settings.jpg) |
+| \!\[Application conversion and analytics dashboard\]\(docs/screenshots/insights.jpg\) | \!\[Ollama endpoint settings and live connectivity check\]\(docs/screenshots/settings.jpg\) |
 
-</details>
+\</details\>
 
 Screenshots were captured from the deployed dark-themed UI. Their data is illustrative; configuration and available options can differ between deployments.
 
@@ -302,9 +302,9 @@ OLLAMA_OUTPUT_TOKENS=4096
 | `.env.example` | Variable names and harmless placeholders | Yes |
 | `.streamlit/config.toml` | Theme, UI, and Streamlit server options | Yes |
 | `.streamlit/secrets.toml` | Local Streamlit secrets, if needed | **No** |
-| Streamlit Cloud **Settings -> Secrets** | Production DB, OAuth, and API credentials | Not stored in the repository |
+| Streamlit Cloud **Settings → Secrets** | Production DB, OAuth, and API credentials | Not stored in the repository |
 
-The inspected code resolves settings in this order: **Streamlit Secrets -> process environment -> local `.env` -> built-in defaults**. The cloud configuration locks the saved Ollama endpoint and model to environment-managed values, preventing old local settings from silently overriding deployment settings.
+The inspected code resolves settings in this order: **Streamlit Secrets → process environment → local `.env` → built-in defaults**. The cloud configuration locks the saved Ollama endpoint and model to environment-managed values, preventing old local settings from silently overriding deployment settings.
 
 ### Common environment variables
 
@@ -375,9 +375,9 @@ This walkthrough deploys an independent **single-owner** copy. The live `careerc
 2. **Create a Neon PostgreSQL database.** Obtain a connection URI for its target branch. Use the pooled URI for app traffic; use a direct database URI when required by migrations or administrative operations. Require TLS (`sslmode=require` or provider-supplied stronger parameters).
 3. **Create a Google OAuth web client.** In Google Cloud Console, configure the OAuth consent screen, test-user settings if applicable, and the exact authorized redirect URI: `https://YOUR-APP.streamlit.app/oauth2callback`.
 4. **Create a Streamlit Cloud app.** Point it to your repository, deployed branch, and `app.py`. Use Python 3.12 where supported by the deployment configuration.
-5. **Paste Secrets.** In **Manage app -> Settings -> Secrets**, set `OWNER_EMAIL`, `DATABASE_URL`, the `[auth]` configuration, and an authenticated HTTPS Ollama endpoint. Keep all top-level settings **above** `[auth]` in TOML.
+5. **Paste Secrets.** In **Manage app → Settings → Secrets**, set `OWNER_EMAIL`, `DATABASE_URL`, the `[auth]` configuration, and an authenticated HTTPS Ollama endpoint. Keep all top-level settings **above** `[auth]` in TOML.
 6. **Choose AI hosting.** For Ollama Cloud use `OLLAMA_BASE_URL=https://ollama.com`, an Ollama Cloud API key, and an actual cloud-accessible model. For self-hosted Ollama, expose a protected HTTPS reverse proxy; do not directly expose an unauthenticated Ollama port.
-7. **Save and reboot.** Verify Google sign-in, dashboard/database connectivity, a record that survives an app reboot, and **Settings -> Run Live Ollama & Model Check**.
+7. **Save and reboot.** Verify Google sign-in, dashboard/database connectivity, a record that survives an app reboot, and **Settings → Run Live Ollama & Model Check**.
 8. **Test each relevant workflow.** Create an application, link an interview, save a note, upload/download a small document, generate a short AI answer, prepare a ZIP backup, and check the contents.
 
 **Important:** Streamlit Cloud's temporary local filesystem should not be used as the only storage for job data or uploaded originals. The inspected cloud implementation uses PostgreSQL and stores newly uploaded document bytes in `DocumentContent` records.
@@ -388,15 +388,15 @@ This walkthrough deploys an independent **single-owner** copy. The live `careerc
 
 On a cloud deployment, sign in with the Google account listed in `OWNER_EMAIL`. The **Dashboard** highlights your active work: applications, upcoming interviews, follow-ups, study tasks, and revisions. Use the quick-action buttons to jump to common tasks.
 
-![Dashboard overview](docs/screenshots/dashboard.jpg)
+\!\[Career Companion dashboard overview\]\(docs/screenshots/dashboard.jpg\)
 
 ### 2. Add a job application
 
-Open **Applications -> Add New Application**. Enter the company and role, then complete useful optional details such as status, priority, source, location, job description, salary range, and job link. Save the application.
+Open **Applications → Add New Application**. Enter the company and role, then complete useful optional details such as status, priority, source, location, job description, salary range, and job link. Save the application.
 
 Use the application card's **Edit Record**, **Status History**, **Contacts & Tasks**, and **Archive / Delete** controls. Add a clear next action and due date—for example, *“Tailor CV to role requirements by Friday.”* An application left in **Saved** is not counted as submitted in conversion denominators.
 
-![Job applications view](docs/screenshots/applications.jpg)
+\!\[Job applications list and record management\]\(docs/screenshots/applications.jpg\)
 
 ### 3. Prepare for an interview
 
@@ -404,29 +404,29 @@ Open **Interviews**, choose an application, and use **Log / Schedule Interview f
 
 Keep practice questions in the **Practice Bank** until you can confirm they were asked in an actual interview; use **Mark as Confirmed Asked in Interview** only when that is true.
 
-![Interview preparation view](docs/screenshots/interviews.jpg)
+\!\[Interview scheduling, preparation checklist, and questions\]\(docs/screenshots/interviews.jpg\)
 
 ### 4. Build your Experience Bank
 
-Open **Experience Bank -> Add Entry to Experience Bank**. Record a real project, technical skill, measurable achievement, volunteering experience, or STAR story. Add relevant competency tags and supporting evidence. The assistant can then reference these facts instead of guessing your experience.
+Open **Experience Bank → Add Entry to Experience Bank**. Record a real project, technical skill, measurable achievement, volunteering experience, or STAR story. Add relevant competency tags and supporting evidence. The assistant can then reference these facts instead of guessing your experience.
 
 Use only facts and outcomes you can substantiate. Any fictional data loaded from the demo-data option is for experimentation, not personal portfolio claims.
 
-![Experience Bank view](docs/screenshots/experience.jpg)
+\!\[Experience Bank entries with skills and STAR stories\]\(docs/screenshots/experience.jpg\)
 
 ### 5. Upload a CV or study resource
 
-Open **Documents -> Upload New Document or Version**. Set a title, document type, and version label, then choose a `.pdf`, `.docx`, `.txt`, or `.md` file. Select **Upload & Extract Text**.
+Open **Documents → Upload New Document or Version**. Set a title, document type, and version label, then choose a `.pdf`, `.docx`, `.txt`, or `.md` file. Select **Upload & Extract Text**.
 
 After upload, check the extraction status. PDF extraction reads selectable text and retains page markers; scanned/image-only PDFs may be flagged as unreadable rather than silently treated as successful. You can preview extracted text and download the original file. The **application-enforced limit is 15 MB by default**, even if Streamlit's file picker displays a higher platform upload limit.
 
-![Documents and Version Repository view](docs/screenshots/documents.jpg)
+\!\[Documents and version repository upload form\]\(docs/screenshots/documents.jpg\)
 
 ### 6. Create learning goals and log study
 
 Open **Learning** to add topics and skills, create certification or job-preparation goals, attach resources, and log study sessions. Add notes and tasks, practice quizzes, and schedule revisions. Review quiz results and the evidence-based proficiency status. Confidence is self-reported and does not substitute for practice evidence.
 
-![Learning Hub and Certification Prep view](docs/screenshots/learning.jpg)
+\!\[Learning Hub skills, confidence ratings, and mastery status\]\(docs/screenshots/learning.jpg\)
 
 ### 7. Use the AI Assistant with specific context
 
@@ -434,21 +434,21 @@ Open **AI Assistant**. Select a mode and, where relevant, a job application, top
 
 For example, choose **Job analysis**, select an application, include relevant Experience Bank entries, and ask it to distinguish **required** and **preferred** skills and identify which ones are supported by recorded evidence. Review the answer before acting on it.
 
-![Career and Learning Assistant view](docs/screenshots/assistant.jpg)
+\!\[Career and Learning Assistant mode and context configuration\]\(docs/screenshots/assistant.jpg\)
 
 ### 8. Review Insights
 
 Open **Insights** to inspect application counts, response/interview/offer history, status and source distributions, frequently requested skills, study duration, and quiz results. The application warns about small samples; these are **historical descriptive statistics**, not predictions of the chance of getting a job.
 
-![Insights and Progress Analytics view](docs/screenshots/insights.jpg)
+\!\[Insights and progress analytics charts\]\(docs/screenshots/insights.jpg\)
 
 ### 9. Export and back up
 
-Open **Settings -> Portability, Exports & Full Backups**. Use **Download Applications CSV** for a spreadsheet-friendly list or **Prepare Full Backup**, followed by **Download Full Backup (.zip)**, for an archive of the supported workspace data and original attachments.
+Open **Settings → Portability, Exports & Full Backups**. Use **Download Applications CSV** for a spreadsheet-friendly list or **Prepare Full Backup**, followed by **Download Full Backup (.zip)**, for an archive of the supported workspace data and original attachments.
 
 To restore, use **Validate & Restore from Backup (.zip)**; review the non-destructive preview and confirm explicitly before replacing the current workspace. **Take a backup of the target workspace first.**
 
-![Settings, Portability and Backups view](docs/screenshots/settings.jpg)
+\!\[Settings, Ollama configuration, and timezone preferences\]\(docs/screenshots/settings.jpg\)
 
 ## AI assistant
 
@@ -532,7 +532,7 @@ Backups are not equivalent to provider-level point-in-time recovery. Maintain in
 | Backup upload rejected | Invalid archive, unsupported format, or archive constraints | Use the app's exported ZIP, review validation preview, and consult `DEPLOYMENT.md` |
 | Local settings seem ignored | Environment or Streamlit Secrets override database-saved preferences | Check the configuration precedence and restart after changes |
 
-For deployed crashes, open **Manage app -> Logs** on Streamlit Community Cloud and inspect the traceback, redacting secrets before sharing it.
+For deployed crashes, open **Manage app → Logs** on Streamlit Community Cloud and inspect the traceback, redacting secrets before sharing it.
 
 ## Testing
 
