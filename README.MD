@@ -40,7 +40,7 @@ Career Companion is a private, Python-based workspace for organizing a job searc
 
 | Job applications | Interview preparation |
 | --- | --- |
-| ![Application tracking and status controls](docs/screenshots/applications.jpg) | ![Interview record and checklist](docs/screenshots/interviews.jpg) |
+| ![Application tracking and status controls](applications.jpg) | ![Interview record and checklist](docs/screenshots/interviews.jpg) |
 
 | Learning and revision | Context-aware AI assistant |
 | --- | --- |
