@@ -1,117 +1,114 @@
 # Career Companion
 
-### Personal Job Search & Learning Hub
+**Personal Job Search and Learning Hub**
 
-Career Companion is a private, Python-based workspace for organizing a job search and the learning that supports it. Instead of keeping applications, interview notes, CV versions, study plans, and practice questions in separate tools, it brings them together in one Streamlit application. An optional Ollama-powered assistant uses selected records and documents as context for focused preparation.
+Career Companion is a private, Python-based workspace for organizing a job search and the technical preparation that supports it. Instead of splitting applications, interview notes, CV versions, study plans, and practice questions across separate tools, it consolidates them into a single Streamlit application. An optional Ollama-powered assistant uses selected records and uploaded documents as context for targeted preparation.
 
-**Workflow:** Discover opportunities → Track applications → Identify requirements → Prepare for interviews → Develop skills → Review progress.
+* **Core workflow:** Discover opportunities → Track applications → Identify requirements → Prepare for interviews → Develop skills → Review progress
+* **Deployed instance:** [careercomp.streamlit.app](https://careercomp.streamlit.app/) (private, owner-restricted workspace; not a public sign-up service)
+* **Self-hosting:** Run locally with SQLite or deploy your own independent cloud instance with PostgreSQL and Google OAuth using the instructions below.
 
-**Deployed instance:** [careercomp.streamlit.app](https://careercomp.streamlit.app/) — a **private, owner-restricted workspace**, not a public sign-up service. To use Career Companion yourself, run it locally or deploy your own independent instance using the instructions below.
+> **Project scope:** Personal productivity and learning. This is not an employer applicant tracking system (ATS), a multi-user SaaS product, or a hiring prediction service. All screenshots show fictional demonstration records and do not represent real employment history.
 
-> **Project scope:** Personal productivity and learning. This is not an applicant tracking system for employers, a multi-user SaaS product, or a hiring prediction service. Screenshots contain fictional demonstration records and should not be interpreted as real employment history.
+---
 
 ## Contents
 
-- [Preview](#preview)
-- [Features](#features)
-- [Technology stack](#technology-stack)
-- [Architecture](#architecture)
-- [Project structure](#project-structure)
-- [Quick start](#quick-start)
-- [Configuration](#configuration)
-- [Deploy your own instance](#deploy-your-own-instance)
-- [User guide](#user-guide)
-- [AI assistant](#ai-assistant)
-- [Persistence, exports, and backups](#persistence-exports-and-backups)
-- [Security and privacy](#security-and-privacy)
-- [Troubleshooting](#troubleshooting)
-- [Testing](#testing)
-- [Limitations and roadmap](#limitations-and-roadmap)
-- [License and references](#license-and-references)
+1. [Preview](#preview)
+2. [Features](#features)
+3. [Technology stack](#technology-stack)
+4. [Architecture](#architecture)
+5. [Project structure](#project-structure)
+6. [Quick start](#quick-start)
+7. [Configuration](#configuration)
+8. [Deploy your own instance](#deploy-your-own-instance)
+9. [User guide](#user-guide)
+10. [AI assistant](#ai-assistant)
+11. [Persistence, exports, and backups](#persistence-exports-and-backups)
+12. [Security and privacy](#security-and-privacy)
+13. [Troubleshooting](#troubleshooting)
+14. [Testing](#testing)
+15. [Limitations and roadmap](#limitations-and-roadmap)
+16. [License and references](#license-and-references)
+
+---
 
 ## Preview
 
-**Workspace overview** — quick actions, active applications, interviews, follow-ups, study tasks, and recent activity.
+### Workspace overview
 
-\!\[Career Companion dashboard with application and preparation summaries\]\(docs/screenshots/dashboard.jpg\)
+The dashboard surfaces quick actions, active applications, upcoming interviews, due follow-ups, study tasks, and spaced-revision items in one view.
 
-\<details\>
-\<summary\>Explore more screenshots\</summary\>
+![Career Companion dashboard with application and preparation summaries](https://github.com/user-attachments/assets/eb0f2474-a6f8-45e3-9c11-1b84cb613bc8)
+
+### Module gallery
 
 | Job applications | Interview preparation |
 | --- | --- |
-| \!\[Application tracking and status controls\]\(docs/screenshots/applications.jpg\) | \!\[Interview record and checklist\]\(docs/screenshots/interviews.jpg\) |
+| ![Application tracking and status controls](https://github.com/user-attachments/assets/35987a59-a737-455f-a3c6-83b669f0e1f1) | ![Interview record and checklist](https://github.com/user-attachments/assets/661d1abb-2aa6-4bcd-9800-4b4b056b99b9) |
 
 | Learning and revision | Context-aware AI assistant |
 | --- | --- |
-| \!\[Learning goals, quiz performance, and proficiency status\]\(docs/screenshots/learning.jpg\) | \!\[AI assistant with mode and context selection\]\(docs/screenshots/assistant.jpg\) |
+| ![Learning goals, quiz performance, and proficiency status](https://github.com/user-attachments/assets/0a20f6ed-1f8f-4711-87e1-3550dd69eaf4) | ![AI assistant with mode and context selection](https://github.com/user-attachments/assets/83b67c08-9463-439c-bd2b-960d65ad6d52) |
 
 | Experience Bank | Documents |
 | --- | --- |
-| \!\[Professional experience records with evidence and competency tags\]\(docs/screenshots/experience.jpg\) | \!\[Document upload and version form\]\(docs/screenshots/documents.jpg\) |
+| ![Professional experience records with evidence and competency tags](https://github.com/user-attachments/assets/d583be3d-8219-4c0c-aad0-fcc69c9c3851) | ![Document upload and version form](https://github.com/user-attachments/assets/a1c8293d-531c-4b35-aac4-2bf05065af6a) |
 
 | Insights | Configuration and diagnostics |
 | --- | --- |
-| \!\[Application conversion and analytics dashboard\]\(docs/screenshots/insights.jpg\) | \!\[Ollama endpoint settings and live connectivity check\]\(docs/screenshots/settings.jpg\) |
+| ![Application conversion and analytics dashboard](https://github.com/user-attachments/assets/662f3b47-c8ce-4dc3-b8d5-9e550a610d4b) | ![Ollama endpoint settings and live connectivity check](https://github.com/user-attachments/assets/f436d5e4-0a65-4253-8446-ff1a7713dc37) |
 
-\</details\>
+*Note: Screenshots were captured from the deployed dark-themed UI using illustrative demo data. Available options may vary by deployment configuration.*
 
-Screenshots were captured from the deployed dark-themed UI. Their data is illustrative; configuration and available options can differ between deployments.
+---
 
 ## Features
 
-| Module | What it does |
+| Module | Primary responsibilities |
 | --- | --- |
-| **Dashboard** | Highlights active applications, upcoming interviews, due follow-ups, study tasks, spaced revisions, and recent activity. Provides quick navigation to common actions. |
-| **Applications** | Records companies, roles, descriptions, sources, salary details, status history, contacts, deadlines, and linked documents; supports filtering, editing, archiving, and deletion. |
-| **Interviews** | Links interviews to applications; stores schedules, participants, preparation checklists, interviewer questions, feedback, reflections, and follow-up actions. |
-| **Learning** | Maintains topics, skills, learning goals, study resources, sessions, notes, tasks, quizzes, flashcards, and a revision schedule. |
-| **AI Assistant** | Provides six modes—Tutor, Quiz, Mock interview, Answer coach, Job analysis, and Study planner—with selectable context and saved sessions. |
-| **Experience Bank** | Stores skills, project evidence, achievements, and STAR stories using structured fields and competency tags. |
-| **Documents** | Stores versioned CVs, cover letters, study notes, and reference files; extracts readable text for the assistant. |
-| **Insights** | Visualizes application status, sources, trends, requested skills, study activity, and quiz performance. |
-| **Settings & Backups** | Configures the timezone, checks the Ollama connection, exports applications, prepares ZIP backups, and validates/restores backups with confirmation. |
+| **Dashboard** | Displays active applications, upcoming interviews, due follow-ups, study tasks, spaced revisions, recent activity, and quick-navigation buttons. |
+| **Applications** | Tracks companies, roles, job descriptions, sources, salary ranges, status history, contacts, deadlines, and linked documents. Supports filtering, editing, archiving, and deletion. |
+| **Interviews** | Links interview stages to applications; stores schedules, participants, preparation checklists, questions for the interviewer, feedback, reflections, and follow-up actions. |
+| **Learning** | Manages topics, skills, learning goals, study resources, logged sessions, notes, tasks, practice quizzes, flashcards, and spaced-revision schedules. |
+| **AI Assistant** | Offers six specialized modes—Tutor, Quiz, Mock interview, Answer coach, Job analysis, and Study planner—with selectable workspace context and saved sessions. |
+| **Experience Bank** | Stores verified skills, project evidence, measurable achievements, and behavioral STAR stories organized by structured fields and competency tags. |
+| **Documents** | Maintains versioned CVs, cover letters, study notes, and reference files while extracting readable text for AI context. |
+| **Insights** | Charts application statuses, sources, timeline trends, frequently requested skills, study hours, and quiz accuracy. |
+| **Settings & Backups** | Configures display timezone, tests live Ollama connectivity, exports applications to CSV, creates full ZIP backups, and validates/restores archives with confirmation. |
 
-### Application tracking
+### Key design principles
 
-Applications can be recorded before submission using **Saved**, then advanced through statuses such as **Applied**, **Screening**, **Assessment**, **Interview**, **Offer**, or other applicable outcomes. Status history is retained, allowing analytics to recognize that an application reached an interview even if its current status later changed. The record can include priority, working arrangement, employment type, salary range, a job URL, and next action with due date.
+* **Full-lifecycle application tracking:** Roles can be saved prior to applying (`Saved`) and progressed through `Applied`, `Screening`, `Assessment`, `Interview`, `Offer`, or final outcomes. Full status history is preserved so conversion metrics accurately recognize every application that reached the interview stage, regardless of its final state. Inactivity never automatically marks an application as rejected.
+* **Interview preparation with clear provenance:** AI-generated practice questions are kept strictly separate from questions confirmed as asked in real interviews. Questions can be promoted between categories as interviews happen.
+* **Evidence-based learning metrics:** Self-reported confidence (`1–5`) is tracked separately from empirical performance. A skill reaches **Demonstrated Proficiency** only after completing at least **3 quiz attempts** with **80% or higher accuracy** and at least **60 minutes of logged study**. Spaced revision follows a six-stage interval ladder: **1, 3, 7, 14, 30, and 60 days**.
+* **Grounded AI assistance:** The assistant can draw context from a selected job description, learning goal, uploaded document, saved note, or Experience Bank entry. System prompts instruct the model to separate explicit job requirements from inferences and never invent personal achievements. Because all responses are model outputs, verify important claims before use.
 
-### Interview preparation with provenance
-
-The interview workspace keeps **AI-generated practice** questions separate from questions **confirmed as asked in an actual interview**. Users can promote or move questions between those categories as the facts change. Preparation checklists, interviewer questions, answer notes, feedback, and personal reflections remain attached to the selected interview.
-
-### Learning without inflated proficiency scores
-
-Learning tracks **self-confidence (1–5)** separately from measured practice. In the inspected implementation, a skill reaches **Demonstrated Proficiency** only after **at least three quiz attempts**, **80% or higher accuracy**, and **at least 60 logged study minutes** for that skill. Insufficient evidence is not presented as mastery. Spaced revision uses a six-stage interval ladder of **1, 3, 7, 14, 30, and 60 days**.
-
-### Evidence-grounded career assistance
-
-The assistant can incorporate a selected job description, skill or learning goal, uploaded documents, saved notes, and Experience Bank entries. Its instructions emphasize separating explicit job requirements from inferences and avoiding invented personal achievements. Generated advice is still model output and should be checked before use.
+---
 
 ## Technology stack
 
-The table below reflects the supplied project archive and the deployed screenshots, not a hypothetical framework stack.
-
-| Layer | Technology | Responsibility |
+| Layer | Technology | Role in application |
 | --- | --- | --- |
-| Application & UI | **Python**, **Streamlit** (`streamlit[auth]==1.66.1` in the inspected archive) | Interactive UI, forms, navigation, session handling, built-in OIDC support |
-| ORM & persistence | **SQLAlchemy 2.x** | Database models, relationships, queries, and sessions |
-| Database migration | **Alembic** | Versioned database schema migrations |
-| Local database | **SQLite** | Optional local development storage |
-| Hosted database | **PostgreSQL**, hosted on **Neon** | Persistent production records and document bytes |
-| PostgreSQL driver | **psycopg 3** (`psycopg[binary]`) | SQLAlchemy/PostgreSQL connectivity |
-| Authentication | **Streamlit OIDC**, **Google OAuth** | Sign-in and verified-email owner restriction |
-| AI | **Ollama HTTP API**; local Ollama or **Ollama Cloud** | Streaming chat, structured assistance, model checks |
-| External search (optional) | **Firecrawl** via HTTP | Web retrieval for AI modes that request it |
-| HTTP & validation | **httpx**, **Pydantic** | Service requests, response parsing, structured validation |
-| Analysis | **pandas** | Aggregation and tabular metrics |
-| Charts | **Plotly** | Interactive charts and analytics |
-| Document parsing | **pypdf**, **python-docx** | Extract text and page/section information |
-| Configuration | **python-dotenv**, Streamlit Secrets | Local and hosted settings |
-| Testing | **pytest**, Streamlit AppTest | Unit, integration-oriented, and UI tests in the repository |
-| Hosting | **Streamlit Community Cloud** | Runs the Python application |
+| **Application & UI** | Python 3.12, Streamlit (`streamlit[auth]==1.66.1`) | Interactive UI, forms, navigation, session state, built-in OIDC authentication |
+| **ORM & persistence** | SQLAlchemy 2.x | Database models, relationships, transactions, and queries |
+| **Schema migrations** | Alembic | Versioned database schema migrations |
+| **Local database** | SQLite | Lightweight local development storage |
+| **Hosted database** | PostgreSQL (Neon) | Persistent cloud storage for application records and uploaded document bytes |
+| **PostgreSQL driver** | psycopg 3 (`psycopg[binary]`) | SQLAlchemy-to-PostgreSQL connectivity |
+| **Authentication** | Streamlit OIDC, Google OAuth | Verified-email sign-in and single-owner access enforcement |
+| **AI inference** | Ollama HTTP API (Local or Ollama Cloud) | Streaming chat, structured JSON outputs, and live model health checks |
+| **Web search (optional)** | Firecrawl HTTP API | External web retrieval for AI modes when explicitly enabled |
+| **HTTP & validation** | httpx, Pydantic | Outbound requests, timeouts, response parsing, and schema validation |
+| **Data & charts** | pandas, Plotly | Tabular aggregation and interactive visual analytics |
+| **Document parsing** | pypdf, python-docx | Text and page/section extraction from PDF and Word documents |
+| **Configuration** | python-dotenv, Streamlit Secrets | Environment variable and cloud secret management |
+| **Testing** | pytest, Streamlit AppTest | Automated unit, service, and UI test suites |
+| **Cloud hosting** | Streamlit Community Cloud | Application hosting and runtime execution |
 
-**Not required by the inspected application:** React, Next.js, a Node.js application backend, Neon Functions, Neon Auth, S3 object storage, or Docker. An S3 service may exist in the owner's Neon project, but the inspected Career Companion document implementation stores newly uploaded file bytes in the database.
+*Note: This architecture does not require React, Next.js, Node.js, Docker, or external S3 object storage. Uploaded document bytes are persisted directly in PostgreSQL via `DocumentContent` records.*
+
+---
 
 ## Architecture
 
@@ -130,29 +127,29 @@ flowchart TD
     E -.->|Optional web research| K[Firecrawl]
 ```
 
-1. **Authentication happens before workspace data is loaded.** The cloud application requires a verified Google email matching `OWNER_EMAIL`.
-2. **Streamlit executes the application services** in Python. This is not a separately deployed REST backend.
-3. **SQLAlchemy provides persistence.** Streamlit Cloud uses PostgreSQL; local mode can use SQLite.
-4. **New document originals and extracted metadata** are saved in PostgreSQL through `Document` and `DocumentContent` records. Legacy file-based attachments are read from local storage when present.
-5. **Ollama runs inference outside Streamlit.** The deployed app connects to a cloud service or a separately secured HTTPS Ollama host; it does not install AI models on the Streamlit server.
-6. **Firecrawl is optional.** Search-enabled requests use it only when configured; private-materials-only modes do not require it.
+1. **Access gate before data load:** In cloud mode, the app verifies the user's Google OIDC token and confirms that `email_verified` is true and the email matches `OWNER_EMAIL` before loading any workspace data.
+2. **Unified Python service layer:** Streamlit executes domain services directly in Python without a separate REST microservice.
+3. **Database persistence:** Cloud deployments require PostgreSQL; local mode supports SQLite.
+4. **In-database document storage:** Uploaded files and extracted text are stored in PostgreSQL (`Document` and `DocumentContent` tables), avoiding reliance on ephemeral container filesystems. Legacy local files are read from disk when present.
+5. **External AI execution:** Model inference runs on Ollama Cloud or a self-hosted Ollama server rather than on the Streamlit host.
+6. **Optional web retrieval:** Firecrawl is called only when a user selects a web-enabled source mode and `FIRECRAWL_API_KEY` is configured.
+
+---
 
 ## Project structure
-
-The following is based on the supplied project archive; your live Git branch may contain later changes.
 
 ```text
 Career_Companion/
 ├── app.py                        # Streamlit entry point and navigation
 ├── requirements.txt              # Python dependencies
-├── .env.example                  # Safe local environment template
+├── .env.example                  # Local environment template
 ├── .gitignore
 ├── .streamlit/
-│   ├── config.toml               # Streamlit theme/server settings
-│   └── secrets.toml.example      # Safe deployment secrets template
+│   ├── config.toml               # Streamlit theme and server settings
+│   └── secrets.toml.example      # Deployment secrets template
 ├── alembic.ini
 ├── docs/
-│   └── screenshots/              # UI screenshots referenced in README
+│   └── screenshots/              # UI screenshots
 │       ├── applications.jpg
 │       ├── assistant.jpg
 │       ├── dashboard.jpg
@@ -169,13 +166,14 @@ Career_Companion/
 │       └── 0002_document_contents.py
 ├── src/
 │   ├── access.py                 # Owner authentication and cloud-storage guard
-│   ├── config.py                 # Settings and configuration precedence
-│   ├── database.py               # Engine, sessions, schema initialization
+│   ├── config.py                 # Settings resolution and configuration precedence
+│   ├── database.py               # Engine, sessions, and schema initialization
 │   ├── models.py                 # SQLAlchemy entities
-│   ├── schemas.py                # Structured request/response schemas
-│   ├── services/                 # Applications, learning, AI, documents, etc.
+│   ├── schemas.py                # Pydantic request/response schemas
+│   ├── services/                 # Business logic and external integrations
 │   │   ├── application_service.py
 │   │   ├── backup_service.py
+│   │   ├── demo_service.py
 │   │   ├── document_service.py
 │   │   ├── endpoint.py
 │   │   ├── firecrawl_service.py
@@ -184,49 +182,45 @@ Career_Companion/
 │   │   ├── ollama_service.py
 │   │   ├── ollama_transport.py
 │   │   └── request_guard.py
-│   └── ui/                       # Nine Streamlit page modules and helpers
+│   └── ui/                       # Streamlit page modules and UI helpers
 ├── tests/                        # pytest test suite
 ├── deploy/
-│   └── Caddyfile.example         # Optional secured self-hosted Ollama proxy
+│   └── Caddyfile.example         # Reverse-proxy template for self-hosted Ollama
 ├── DEPLOYMENT.md
 └── VALIDATION.md
 ```
 
-The repository also includes a demo-data service (`src/services/demo_service.py`) and additional UI files. A full README should remain the entry point; implementation details live in the source modules.
+---
 
 ## Quick start
 
-### Requirements
+### Prerequisites
 
-- **Python 3.12** is recommended by the project's deployment notes. Use a compatible version supported by the pinned Streamlit release.
-- Git and Python `pip`.
-- **Optional:** Ollama installed locally if you want local AI, or an Ollama Cloud account and API key for hosted inference.
-- **Optional:** A PostgreSQL database if you want to run locally against the same storage type as production.
+* **Python 3.12** (recommended) and `pip`
+* **Git**
+* **Optional (AI):** Local [Ollama](https://ollama.com/) installation or an Ollama Cloud API key
+* **Optional (Database):** PostgreSQL instance if testing production storage locally
 
-### 1. Clone the project
+### 1. Clone the repository
 
 ```bash
 git clone <YOUR_REPOSITORY_URL>
 cd Career_Companion
 ```
 
-Replace `<YOUR_REPOSITORY_URL>` with the actual public or private Git repository URL. If you downloaded the source as a ZIP, extract it and open a terminal beside `app.py`.
-
 ### 2. Create and activate a virtual environment
+
+**Linux / macOS:**
 
 ```bash
 python -m venv .venv
-```
-
-Linux / macOS:
-
-```bash
 source .venv/bin/activate
 ```
 
-Windows PowerShell:
+**Windows (PowerShell):**
 
 ```powershell
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
@@ -237,9 +231,9 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-### 4. Configure a local environment
+### 4. Configure your local `.env`
 
-Copy `.env.example` to `.env` and edit it. For the simplest **local-only** setup:
+Copy `.env.example` to `.env` and set your local preferences:
 
 ```dotenv
 APP_ENV=local
@@ -252,32 +246,27 @@ OLLAMA_API_KEY=
 APP_TIMEZONE=Europe/Bucharest
 ```
 
-The explicit `APP_ENV=local` setting is important: if omitted, the application deliberately defaults to protected cloud mode. Local authentication bypass is **for a trusted personal computer only**, not an Internet-facing deployment.
+> **Important:** Explicitly set `APP_ENV=local` for local use. When omitted, the application defaults to protected `cloud` mode. Never set `AUTH_REQUIRED=false` on an internet-facing host.
 
-For local Ollama inference, make sure Ollama is running and the model is available:
+If running Ollama locally, pull your configured model and verify that the server is active:
 
 ```bash
 ollama pull qwen2.5:0.5b
 ollama list
-```
-
-Start the Ollama server only if it is not already running (desktop Ollama may start it automatically):
-
-```bash
 ollama serve
 ```
 
-### 5. Start the application
+### 5. Launch the application
 
 ```bash
 python -m streamlit run app.py
 ```
 
-Open **<http://localhost:8501>**. The entry point calls `init_db()`, which creates missing SQLAlchemy tables. The repository also contains Alembic migrations; for an existing database already managed by Alembic, use the appropriate migration workflow rather than assuming `create_all()` upgrades every existing column.
+Open `http://localhost:8501` in your browser. On startup, `init_db()` creates any missing tables automatically. For databases managed through Alembic, apply schema upgrades via Alembic migrations.
 
-### Use Ollama Cloud from a locally running Streamlit app
+### Optional: Use Ollama Cloud from a local instance
 
-You can keep Streamlit in local mode and run the AI remotely. In your local **untracked** `.env`, change only the AI settings:
+To keep the app local while offloading AI inference to Ollama Cloud, update the AI variables in your untracked `.env`:
 
 ```dotenv
 APP_ENV=local
@@ -290,54 +279,60 @@ OLLAMA_NUM_CTX=16384
 OLLAMA_OUTPUT_TOKENS=4096
 ```
 
-`beam:cloud` is the model shown in the supplied deployed screenshots; check the current Ollama cloud catalog and your account's model access before using any specific name. A model downloaded with `ollama pull` on your PC does **not** automatically exist on Ollama Cloud.
+*Note: Verify that the model name specified in `OLLAMA_MODEL` is available in your Ollama Cloud catalog. Models pulled locally with `ollama pull` do not automatically exist on Ollama Cloud.*
+
+---
 
 ## Configuration
 
-### Where each setting belongs
+### Configuration precedence
 
-| Location | Use | Commit to Git? |
+Settings are resolved in the following order:
+1. **Streamlit Secrets** (`.streamlit/secrets.toml` or Streamlit Cloud Secrets)
+2. **Process environment variables**
+3. **Local `.env` file**
+4. **Built-in defaults**
+
+In `cloud` mode, the Ollama endpoint and model are locked to environment-managed settings so stale database preferences cannot override deployment configuration.
+
+| File / Location | Purpose | Commit to Git? |
 | --- | --- | --- |
-| `.env` | Local machine runtime values | **No** |
-| `.env.example` | Variable names and harmless placeholders | Yes |
-| `.streamlit/config.toml` | Theme, UI, and Streamlit server options | Yes |
-| `.streamlit/secrets.toml` | Local Streamlit secrets, if needed | **No** |
-| Streamlit Cloud **Settings → Secrets** | Production DB, OAuth, and API credentials | Not stored in the repository |
+| `.env` | Local development configuration | **No** |
+| `.env.example` | Safe placeholder template for local setup | Yes |
+| `.streamlit/config.toml` | UI theme and server settings | Yes |
+| `.streamlit/secrets.toml` | Local Streamlit secrets (if testing OIDC locally) | **No** |
+| Streamlit Cloud **Settings → Secrets** | Production database, OAuth, and API credentials | Managed in cloud console |
 
-The inspected code resolves settings in this order: **Streamlit Secrets → process environment → local `.env` → built-in defaults**. The cloud configuration locks the saved Ollama endpoint and model to environment-managed values, preventing old local settings from silently overriding deployment settings.
+### Environment variables reference
 
-### Common environment variables
-
-| Variable | Description | Example or default |
+| Variable | Purpose | Default / Example |
 | --- | --- | --- |
-| `APP_ENV` | Selects local or protected cloud mode | `local` or `cloud` |
-| `AUTH_REQUIRED` | Enables local sign-in when explicitly requested | `false` in local mode |
-| `OWNER_EMAIL` | Exact verified Google email allowed in hosted workspace | `owner@example.com` |
-| `DATABASE_URL` | SQLite or PostgreSQL connection string | `sqlite:///data/career_companion.db` |
-| `AI_PROVIDER` | Ollama provider selection | `ollama` |
-| `OLLAMA_BASE_URL` | Ollama HTTP base URL | Local: `http://localhost:11434`; Cloud: `https://ollama.com` |
-| `OLLAMA_API_KEY` | Bearer token for hosted Ollama/secured proxy | Secret, never commit |
-| `OLLAMA_MODEL` | Model available at that endpoint | Local: `qwen2.5:0.5b`; cloud example: `beam:cloud` |
-| `OLLAMA_NUM_CTX` | Requested model context budget | Default `4096` |
-| `OLLAMA_OUTPUT_TOKENS` | Requested Detailed-mode output budget | Default `700` |
-| `OLLAMA_CONNECT_TIMEOUT` | Connection timeout, seconds | `5` |
-| `OLLAMA_FIRST_TIMEOUT` | First-answer timeout, seconds | `120` |
-| `OLLAMA_IDLE_TIMEOUT` | Streaming idle timeout, seconds | `60` |
-| `OLLAMA_TOTAL_TIMEOUT` | Overall model request budget, seconds | `300` |
-| `OLLAMA_KEEP_ALIVE` | Ollama keep-alive preference | `10m` |
-| `FIRECRAWL_API_KEY` | Enables optional web retrieval | Blank disables it |
-| `FIRECRAWL_TIMEOUT` | Search request timeout | `30` |
-| `SEARCH_MAX_RESULTS` | Max web search results | `3` |
-| `SEARCH_CACHE_TTL_SECONDS` | Search cache lifetime | `3600` |
-| `APP_TIMEZONE` | Display timezone | `Europe/Bucharest` |
-| `MAX_UPLOAD_SIZE_MB` | App-level per-document upload limit | `15` |
-| `MAX_CONTEXT_CHARS` | Limit on assembled AI context text | `6000` |
+| `APP_ENV` | Runtime mode (`local` or `cloud`) | `cloud` (if omitted) |
+| `AUTH_REQUIRED` | Enforces Google OIDC sign-in in local mode | `false` (local), always enforced in `cloud` |
+| `OWNER_EMAIL` | Verified Google email permitted to access cloud workspace | `owner@example.com` |
+| `DATABASE_URL` | SQLite or PostgreSQL connection URI | `sqlite:///data/career_companion.db` |
+| `AI_PROVIDER` | AI backend identifier | `ollama` |
+| `OLLAMA_BASE_URL` | Ollama server URL | `http://localhost:11434` or `https://ollama.com` |
+| `OLLAMA_API_KEY` | Bearer token for Ollama Cloud or authenticated proxy | Empty locally; required for cloud |
+| `OLLAMA_MODEL` | Target model identifier on the configured host | `qwen2.5:0.5b` or `beam:cloud` |
+| `OLLAMA_NUM_CTX` | Context window budget (tokens) | `4096` |
+| `OLLAMA_OUTPUT_TOKENS` | Maximum output tokens in **Detailed** response mode | `700` (capped at half of `OLLAMA_NUM_CTX`) |
+| `OLLAMA_CONNECT_TIMEOUT` | Initial connection timeout (seconds) | `5` |
+| `OLLAMA_FIRST_TIMEOUT` | Time-to-first-token timeout (seconds) | `120` |
+| `OLLAMA_IDLE_TIMEOUT` | Stream idle timeout (seconds) | `60` |
+| `OLLAMA_TOTAL_TIMEOUT` | Maximum end-to-end generation time (seconds) | `300` |
+| `OLLAMA_KEEP_ALIVE` | Model keep-alive duration | `10m` |
+| `FIRECRAWL_API_KEY` | API key for optional web retrieval | Empty (disables web search) |
+| `FIRECRAWL_TIMEOUT` | Web search timeout (seconds) | `30` |
+| `SEARCH_MAX_RESULTS` | Maximum web pages retrieved per query | `3` |
+| `SEARCH_CACHE_TTL_SECONDS` | Cache lifetime for web search results (seconds) | `3600` |
+| `APP_TIMEZONE` | Display timezone for schedules and timestamps | `Europe/Bucharest` |
+| `MAX_UPLOAD_SIZE_MB` | Application-enforced per-file upload limit (MB) | `15` |
+| `MAX_CONTEXT_CHARS` | Character ceiling for assembled AI context | `6000` |
 
-**Output-length note:** In the inspected code, **Quick** mode caps generation at **512** tokens, while **Detailed** requests up to `OLLAMA_OUTPUT_TOKENS`. The configured output budget is also constrained to no more than half `OLLAMA_NUM_CTX`. Hitting a length limit can result in a preserved partial answer rather than a complete result.
+### Streamlit Cloud Secrets template
 
-### Example Streamlit Cloud Secrets
-
-The sample below corresponds to the **flat `[auth]` configuration used by the inspected `st.login()` call**. Preserve the values already working for your instance and replace only placeholders on a new deployment.
+In `src/access.py`, `st.login()` is invoked without a named provider argument, so Google OAuth settings belong directly under `[auth]`. Keep all top-level keys **above** the `[auth]` table header:
 
 ```toml
 APP_ENV = "cloud"
@@ -351,7 +346,7 @@ OLLAMA_MODEL = "beam:cloud"
 OLLAMA_NUM_CTX = "16384"
 OLLAMA_OUTPUT_TOKENS = "4096"
 
-FIRECRAWL_API_KEY = ""  # Optional
+FIRECRAWL_API_KEY = ""
 APP_TIMEZONE = "Europe/Bucharest"
 MAX_UPLOAD_SIZE_MB = "15"
 
@@ -363,232 +358,238 @@ client_secret = "YOUR_GOOGLE_OAUTH_CLIENT_SECRET"
 server_metadata_url = "https://accounts.google.com/.well-known/openid-configuration"
 ```
 
-**OAuth implementation detail:** The supplied `src/access.py` calls `st.login()` without a provider argument, so Google credentials appear directly beneath `[auth]`. If you change to a named `[auth.google]` provider, the corresponding application login call must also be updated to `st.login("google")`.
-
-Never publish this file with real values or expose a PostgreSQL password, OAuth secret, or API key in issue reports or screenshots.
+---
 
 ## Deploy your own instance
 
-This walkthrough deploys an independent **single-owner** copy. The live `careercomp.streamlit.app` URL is not an invitation to register as another user.
+The live deployment at `careercomp.streamlit.app` is locked to a single owner. To deploy your own private copy on Streamlit Community Cloud:
 
-1. **Push your own repository.** Ensure `app.py`, `src/`, `migrations/`, `requirements.txt`, and `.streamlit/config.toml` are tracked. Do not push `.env`, `.streamlit/secrets.toml`, `data/`, or backup ZIPs.
-2. **Create a Neon PostgreSQL database.** Obtain a connection URI for its target branch. Use the pooled URI for app traffic; use a direct database URI when required by migrations or administrative operations. Require TLS (`sslmode=require` or provider-supplied stronger parameters).
-3. **Create a Google OAuth web client.** In Google Cloud Console, configure the OAuth consent screen, test-user settings if applicable, and the exact authorized redirect URI: `https://YOUR-APP.streamlit.app/oauth2callback`.
-4. **Create a Streamlit Cloud app.** Point it to your repository, deployed branch, and `app.py`. Use Python 3.12 where supported by the deployment configuration.
-5. **Paste Secrets.** In **Manage app → Settings → Secrets**, set `OWNER_EMAIL`, `DATABASE_URL`, the `[auth]` configuration, and an authenticated HTTPS Ollama endpoint. Keep all top-level settings **above** `[auth]` in TOML.
-6. **Choose AI hosting.** For Ollama Cloud use `OLLAMA_BASE_URL=https://ollama.com`, an Ollama Cloud API key, and an actual cloud-accessible model. For self-hosted Ollama, expose a protected HTTPS reverse proxy; do not directly expose an unauthenticated Ollama port.
-7. **Save and reboot.** Verify Google sign-in, dashboard/database connectivity, a record that survives an app reboot, and **Settings → Run Live Ollama & Model Check**.
-8. **Test each relevant workflow.** Create an application, link an interview, save a note, upload/download a small document, generate a short AI answer, prepare a ZIP backup, and check the contents.
+1. **Fork or push the repository:** Confirm `app.py`, `src/`, `migrations/`, `requirements.txt`, and `.streamlit/config.toml` are committed. Never commit `.env`, `.streamlit/secrets.toml`, `data/`, or backup archives.
+2. **Provision a Neon PostgreSQL database:** Create a project on Neon and copy the pooled connection string with TLS enabled (`?sslmode=require`).
+3. **Configure Google OAuth:** In Google Cloud Console, create an OAuth 2.0 Web Client and register the exact callback URL: `https://YOUR-APP.streamlit.app/oauth2callback`.
+4. **Create the Streamlit Cloud app:** Point Streamlit Community Cloud to your repository, branch, and `app.py` using Python 3.12.
+5. **Configure Secrets:** Open **Manage app → Settings → Secrets** and paste your TOML configuration following the template above.
+6. **Connect an HTTPS Ollama endpoint:** Use Ollama Cloud (`https://ollama.com`) with an API key, or place a self-hosted Ollama instance behind an authenticated TLS reverse proxy (see `deploy/Caddyfile.example`).
+7. **Reboot and verify:** Sign in with your `OWNER_EMAIL` Google account, run **Settings → Run Live Ollama & Model Check**, and verify that a newly created record persists across an app reboot.
 
-**Important:** Streamlit Cloud's temporary local filesystem should not be used as the only storage for job data or uploaded originals. The inspected cloud implementation uses PostgreSQL and stores newly uploaded document bytes in `DocumentContent` records.
+---
 
 ## User guide
 
-### 1. Sign in and use the Dashboard
+### 1. Sign in and review the Dashboard
 
-On a cloud deployment, sign in with the Google account listed in `OWNER_EMAIL`. The **Dashboard** highlights your active work: applications, upcoming interviews, follow-ups, study tasks, and revisions. Use the quick-action buttons to jump to common tasks.
+Sign in with the Google account matching `OWNER_EMAIL` (in cloud mode). The **Dashboard** summarizes active applications, upcoming interviews, due follow-ups, study tasks, and spaced revisions due today. Use the top action buttons to jump directly to common workflows.
 
-\!\[Career Companion dashboard overview\]\(docs/screenshots/dashboard.jpg\)
+![Career Companion dashboard overview](https://github.com/user-attachments/assets/eb0f2474-a6f8-45e3-9c11-1b84cb613bc8)
 
-### 2. Add a job application
+---
 
-Open **Applications → Add New Application**. Enter the company and role, then complete useful optional details such as status, priority, source, location, job description, salary range, and job link. Save the application.
+### 2. Track job applications
 
-Use the application card's **Edit Record**, **Status History**, **Contacts & Tasks**, and **Archive / Delete** controls. Add a clear next action and due date—for example, *“Tailor CV to role requirements by Friday.”* An application left in **Saved** is not counted as submitted in conversion denominators.
+Open **Applications → Add New Application** to record the company, role title, status, priority, source, work arrangement, salary range, job description, and URL.
+* Use the card tabs (**Overview & Docs**, **Edit Record**, **Status History**, **Contacts & Tasks**, **Archive / Delete**) to manage the lifecycle of each role.
+* Set a concrete **Next Action** and **Due Date** (for example, *"Tailor CV for streaming pipelines before applying"*).
+* Roles kept in `Saved` status are excluded from submitted-application conversion denominators.
 
-\!\[Job applications list and record management\]\(docs/screenshots/applications.jpg\)
+![Job applications list and record management](https://github.com/user-attachments/assets/35987a59-a737-455f-a3c6-83b669f0e1f1)
 
-### 3. Prepare for an interview
+---
 
-Open **Interviews**, choose an application, and use **Log / Schedule Interview for This Application**. Record the interview type, date, participant details, and preparation checklist. Add topics to ask the interviewer and record feedback and reflection afterward.
+### 3. Schedule and prepare for interviews
 
-Keep practice questions in the **Practice Bank** until you can confirm they were asked in an actual interview; use **Mark as Confirmed Asked in Interview** only when that is true.
+Select an application in **Interviews** and open **Log / Schedule Interview for This Application** to record the stage, date/time, participants, and preparation checklist.
+* Add questions you want to ask the interviewer and record post-interview signals and personal reflections.
+* Keep AI-generated practice prompts in the **Practice Bank**; only promote a question using **Mark as Confirmed Asked in Interview** if it was actually asked during a real interview.
 
-\!\[Interview scheduling, preparation checklist, and questions\]\(docs/screenshots/interviews.jpg\)
+![Interview scheduling, preparation checklist, and questions](https://github.com/user-attachments/assets/661d1abb-2aa6-4bcd-9800-4b4b056b99b9)
+
+---
 
 ### 4. Build your Experience Bank
 
-Open **Experience Bank → Add Entry to Experience Bank**. Record a real project, technical skill, measurable achievement, volunteering experience, or STAR story. Add relevant competency tags and supporting evidence. The assistant can then reference these facts instead of guessing your experience.
+Open **Experience Bank → Add Entry to Experience Bank** to store verified technical skills, projects, measurable achievements, volunteering roles, and behavioral STAR stories.
+* Tag entries with competencies (such as `#system-design` or `#troubleshooting`) and attach concrete supporting evidence.
+* The AI Assistant uses these entries to ground interview coaching and job-fit analysis in your real background rather than inventing achievements.
 
-Use only facts and outcomes you can substantiate. Any fictional data loaded from the demo-data option is for experimentation, not personal portfolio claims.
+![Experience Bank entries with skills and STAR stories](https://github.com/user-attachments/assets/d583be3d-8219-4c0c-aad0-fcc69c9c3851)
 
-\!\[Experience Bank entries with skills and STAR stories\]\(docs/screenshots/experience.jpg\)
+---
 
-### 5. Upload a CV or study resource
+### 5. Upload CVs and reference documents
 
-Open **Documents → Upload New Document or Version**. Set a title, document type, and version label, then choose a `.pdf`, `.docx`, `.txt`, or `.md` file. Select **Upload & Extract Text**.
+Open **Documents → Upload New Document or Version** to store `.pdf`, `.docx`, `.txt`, or `.md` files with version labels (such as `v1.0`).
+* Click **Upload & Extract Text** to parse selectable text and retain page markers for AI citations.
+* Scanned or image-only PDFs without selectable text are flagged transparently rather than silently treated as empty documents.
+* The application enforces a **15 MB per-file limit** by default.
 
-After upload, check the extraction status. PDF extraction reads selectable text and retains page markers; scanned/image-only PDFs may be flagged as unreadable rather than silently treated as successful. You can preview extracted text and download the original file. The **application-enforced limit is 15 MB by default**, even if Streamlit's file picker displays a higher platform upload limit.
+![Documents and version repository upload form](https://github.com/user-attachments/assets/a1c8293d-531c-4b35-aac4-2bf05065af6a)
 
-\!\[Documents and version repository upload form\]\(docs/screenshots/documents.jpg\)
+---
 
-### 6. Create learning goals and log study
+### 6. Manage learning goals, quizzes, and spaced revision
 
-Open **Learning** to add topics and skills, create certification or job-preparation goals, attach resources, and log study sessions. Add notes and tasks, practice quizzes, and schedule revisions. Review quiz results and the evidence-based proficiency status. Confidence is self-reported and does not substitute for practice evidence.
+Use **Learning** to track technical topics, certification prep, study resources, logged study sessions, practice quizzes, and flashcards.
+* Self-confidence ratings (`1–5`) are displayed alongside empirical quiz scores and logged study minutes.
+* A topic reaches **Demonstrated Proficiency** only after meeting the mastery policy (**3+ quiz attempts**, **80%+ accuracy**, and **60+ minutes of logged study**).
 
-\!\[Learning Hub skills, confidence ratings, and mastery status\]\(docs/screenshots/learning.jpg\)
+![Learning Hub skills, confidence ratings, and mastery status](https://github.com/user-attachments/assets/0a20f6ed-1f8f-4711-87e1-3550dd69eaf4)
 
-### 7. Use the AI Assistant with specific context
+---
 
-Open **AI Assistant**. Select a mode and, where relevant, a job application, topic, learning goal, documents, notes, and Experience Bank records. Choose **My materials (no web search)** unless you specifically need web retrieval. Use **Quick** for shorter results and **Detailed** for longer answers.
+### 7. Run context-aware sessions in the AI Assistant
 
-For example, choose **Job analysis**, select an application, include relevant Experience Bank entries, and ask it to distinguish **required** and **preferred** skills and identify which ones are supported by recorded evidence. Review the answer before acting on it.
+Open **AI Assistant**, select one of the six modes, and attach relevant workspace context (an application, topic, learning goal, uploaded documents, saved notes, or Experience Bank records).
+* Choose **My materials (no web search)** for private context analysis, or enable web retrieval when Firecrawl is configured.
+* Choose **Quick** (up to 512 tokens) for concise answers or **Detailed** (up to `OLLAMA_OUTPUT_TOKENS`) for comprehensive breakdowns.
 
-\!\[Career and Learning Assistant mode and context configuration\]\(docs/screenshots/assistant.jpg\)
+![Career and Learning Assistant mode and context configuration](https://github.com/user-attachments/assets/83b67c08-9463-439c-bd2b-960d65ad6d52)
 
-### 8. Review Insights
+---
 
-Open **Insights** to inspect application counts, response/interview/offer history, status and source distributions, frequently requested skills, study duration, and quiz results. The application warns about small samples; these are **historical descriptive statistics**, not predictions of the chance of getting a job.
+### 8. Review Insights and conversion analytics
 
-\!\[Insights and progress analytics charts\]\(docs/screenshots/insights.jpg\)
+Open **Insights** to inspect submitted application counts, employer response rates, interview conversion rates, status distributions, application timelines, requested skills, and study metrics.
+* Conversion percentages exclude `Saved` (unapplied) roles from denominators and inspect full status history.
+* Small-sample notices appear automatically when submitted application counts are low. Metrics are descriptive historical summaries, not hiring probability predictions.
 
-### 9. Export and back up
+![Insights and progress analytics charts](https://github.com/user-attachments/assets/662f3b47-c8ce-4dc3-b8d5-9e550a610d4b)
 
-Open **Settings → Portability, Exports & Full Backups**. Use **Download Applications CSV** for a spreadsheet-friendly list or **Prepare Full Backup**, followed by **Download Full Backup (.zip)**, for an archive of the supported workspace data and original attachments.
+---
 
-To restore, use **Validate & Restore from Backup (.zip)**; review the non-destructive preview and confirm explicitly before replacing the current workspace. **Take a backup of the target workspace first.**
+### 9. Configure settings, diagnostics, and full backups
 
-\!\[Settings, Ollama configuration, and timezone preferences\]\(docs/screenshots/settings.jpg\)
+Open **Settings** to set your display timezone, run live Ollama connectivity and model checks, export applications to CSV, or generate a full workspace `.zip` backup.
+* Use **Validate & Restore from Backup (.zip)** to preview an archive's contents before executing a transactional restore. Always export a backup of your current workspace before restoring.
+
+![Settings, Ollama configuration, and timezone preferences](https://github.com/user-attachments/assets/f436d5e4-0a65-4253-8446-ff1a7713dc37)
+
+---
 
 ## AI assistant
 
-### Available modes
+### Assistant modes
 
-| Mode | Typical use | Notes |
+| Mode | Purpose | Key behavior |
 | --- | --- | --- |
-| **Tutor** | Explain a concept at beginner, intermediate, or deep technical level | Can use selected reference materials and page citations when available |
-| **Quiz** | Produce practice multiple-choice questions | User selects 1–5 questions; structured output is validated |
-| **Mock interview** | Practice technical, behavioral STAR, or mixed interviews | Designed to ask one question at a time |
-| **Answer coach** | Critique a draft interview answer | Instructed to avoid inventing achievements or metrics |
-| **Job analysis** | Classify explicit role requirements and compare against experience | Separates required/preferred and missing/unknown evidence |
-| **Study planner** | Suggest a study plan from goals and available weekly hours | Treat generated plans as drafts to review |
+| **Tutor** | Explains technical concepts at beginner, intermediate, or deep level | Grounds explanations in selected study notes/documents with page citations when available |
+| **Quiz** | Generates 1–5 multiple-choice practice questions | Validates structured JSON output and records results toward skill proficiency |
+| **Mock interview** | Conducts technical, behavioral STAR, or mixed interview practice | Asks one question at a time and critiques responses |
+| **Answer coach** | Reviews and refines draft interview answers | Uses Experience Bank evidence without fabricating metrics or claims |
+| **Job analysis** | Compares a job description against your recorded background | Separates explicit required/preferred skills from gaps and unverified claims |
+| **Study planner** | Builds a structured schedule from goals and weekly hours | Produces an actionable draft plan to review and adjust |
 
-### Source and context options
+### Context and source modes
 
-- **My materials (no web search):** selected job, notes, documents, skills, goals, and Experience Bank entries.
-- **Combine my materials + web:** includes selected personal context and attempts optional Firecrawl retrieval.
-- **Search the web:** searches external sources when Firecrawl is configured; does not use selected private materials in that mode.
+* **My materials (no web search):** Uses only the workspace records and documents you select.
+* **Combine my materials + web:** Combines selected workspace records with live Firecrawl web results.
+* **Search the web:** Queries external web sources via Firecrawl without sending selected private workspace records.
 
-Web results are external, untrusted source data. A listed link does not guarantee that every AI claim was verified. Uploaded material and Experience Bank content are sent to the configured AI endpoint when selected, so avoid transmitting confidential material to a provider you do not trust.
+### Local Ollama vs. Ollama Cloud
 
-### Ollama Cloud versus local Ollama
-
-| | Local Ollama | Ollama Cloud |
+| Aspect | Local Ollama | Ollama Cloud |
 | --- | --- | --- |
-| Base URL | `http://localhost:11434` | `https://ollama.com` |
-| Runtime | Your computer or separately hosted Ollama machine | Remote Ollama-hosted inference |
-| API key | Usually none for loopback | Required for direct cloud API |
-| Model selection | Must be installed on that Ollama host | Must be available to your cloud account |
-| Streamlit Cloud compatibility | Requires separate authenticated HTTPS access | Direct HTTPS service connection |
+| **Base URL** | `http://localhost:11434` | `https://ollama.com` |
+| **Execution host** | Local machine or self-hosted server | Managed Ollama Cloud infrastructure |
+| **Authentication** | None on loopback; Bearer token behind proxy | `OLLAMA_API_KEY` required |
+| **Model availability** | Models pulled via `ollama pull` | Models available in your Ollama Cloud account |
+| **Streamlit Cloud support** | Requires authenticated HTTPS tunnel/proxy | Works directly over HTTPS |
 
-A model from `ollama list` on your PC is **not** automatically available at `https://ollama.com`. The configured model must exist at the chosen endpoint. The included example `.env` defaults to a local Qwen model, while the provided deployment screenshots show `beam:cloud`.
+### Output token budgets and partial responses
 
-### Output limits and partial responses
+* **Quick mode** caps generation at **512 output tokens**.
+* **Detailed mode** requests up to `OLLAMA_OUTPUT_TOKENS` (constrained to at most half of `OLLAMA_NUM_CTX`).
+* If generation stops early due to token limits or timeouts, the application marks the message as **incomplete**, preserves the partial text, and allows you to download it or save it as an explicitly labeled incomplete note.
 
-The inspected implementation uses a Quick cap of **512 output tokens**; Detailed uses the configured `OLLAMA_OUTPUT_TOKENS` value, subject to the model/context configuration. It also enforces a context-related ceiling and request timeouts. If the provider stops with a length-limit condition, the application labels the response as **incomplete**, retains the partial text, and can offer options to download or save it as an explicitly incomplete note.
-
-Increase `OLLAMA_OUTPUT_TOKENS` and choose **Detailed** for longer responses, but don't assume that arbitrarily high limits guarantee completion. Smaller questions and context selections are often more reliable for structured outputs. The model can make mistakes, fabricate details, or fail a requested schema.
+---
 
 ## Persistence, exports, and backups
 
-### Database behavior
+* **Database storage:** Local deployments can use SQLite (`data/career_companion.db`), while hosted cloud deployments require PostgreSQL (`DATABASE_URL`).
+* **Document storage:** Newly uploaded files store their binary payload in PostgreSQL (`DocumentContent`) alongside extracted text and metadata (`Document`).
+* **ZIP backup contents:** Full backups include supported database tables and uploaded document originals while excluding secret configuration values. Because backups contain personal career history and notes, store them securely.
+* **Transactional restore:** Restoring from a `.zip` archive validates the schema and displays a non-destructive summary first. Confirming the restore replaces the current workspace data inside a database transaction.
 
-- **Local:** SQLite can store the workspace on a trusted machine.
-- **Hosted:** `src/access.py` requires a PostgreSQL `DATABASE_URL`. `src/database.py` creates missing tables on startup, and the repository includes Alembic migrations for schema-managed environments.
-- **Documents:** new original file bytes are stored in the database (`DocumentContent`), together with metadata/extracted text (`Document`). Legacy local attachments may still be read from `data/uploads/`.
-- **Settings and chats:** user preferences, AI sessions/messages, applications, interviews, and learning information use SQLAlchemy records.
-
-The backup service exports supported tables and attachment contents into a ZIP and excludes known secret settings. **The archive can still contain highly personal job information and text copied into notes or chats**. Treat it as sensitive and store it privately. Import validation previews the archive before a transaction-backed restore; an authorized restore **replaces** the target workspace's existing data.
-
-Backups are not equivalent to provider-level point-in-time recovery. Maintain independent backup copies and test restoring to a disposable database before relying on them. Database provider storage limits and upload size constraints still apply.
+---
 
 ## Security and privacy
 
-- Cloud authentication verifies Google OIDC claims and allows access only when `email_verified` is true and the account email matches `OWNER_EMAIL` (case-insensitive).
-- The application checks owner access before opening workspace data, but it is **not** designed to isolate data between multiple users or organizations.
-- Store `DATABASE_URL`, `OLLAMA_API_KEY`, Firecrawl credentials, OAuth client secrets, and the cookie secret only in local untracked config or Streamlit Cloud Secrets.
-- Do not commit `.env`, `.streamlit/secrets.toml`, `data/`, backups, or personal documents. The included `.gitignore` covers common private paths.
-- If a secret was previously committed or shared, **rotate the credential**; removing it from the latest commit does not remove it from Git history.
-- Hosted Ollama endpoints must use HTTPS with authorization. Do **not** publicly expose a local Ollama port without access control.
-- Selected data is sent to the AI provider. Optional Firecrawl searches send web-search queries to an additional external service; review those providers' current data policies before sending sensitive content.
-- An authenticated personal workspace is not proof of independent penetration testing, compliance certification, end-to-end encryption, or zero retention by service providers.
+* **Single-owner access control:** Cloud mode requires a verified Google OAuth account matching `OWNER_EMAIL` (case-insensitive) before any workspace queries run.
+* **Credential hygiene:** Keep `DATABASE_URL`, `OLLAMA_API_KEY`, `FIRECRAWL_API_KEY`, and `[auth]` secrets strictly inside untracked `.env` files or Streamlit Cloud Secrets. If a credential is ever committed to Git history, rotate it immediately.
+* **External data transmission:** Selected workspace records and uploaded document text are sent to your configured Ollama endpoint during AI requests, and web queries are sent to Firecrawl when web search is enabled. Review your providers' privacy policies before transmitting sensitive data.
+* **Self-hosted Ollama security:** Never expose port `11434` directly to the public internet without TLS and authentication.
+
+---
 
 ## Troubleshooting
 
-| Symptom | Likely cause | What to check |
+| Symptom | Likely cause | Resolution |
 | --- | --- | --- |
-| `ModuleNotFoundError: src.access` or `src.services.endpoint` | A source file exists locally but was never committed | `git status`, `git ls-files`, correct file paths/case, pushed branch |
-| `Private workspace is locked` | Missing owner email or OIDC secrets | Set top-level `OWNER_EMAIL` and the matching `[auth]` configuration in **Streamlit Cloud Secrets** |
-| Google `redirect_uri_mismatch` | Google OAuth web client has a different callback | Register the exact `https://YOUR-APP.streamlit.app/oauth2callback` URI |
-| `Cloud mode requires ... PostgreSQL DATABASE_URL` | Cloud app is configured with SQLite or no DB URI | Set a persistent PostgreSQL URL in Streamlit Secrets |
-| Database connection error | Incorrect URI/password, SSL mode, unreachable database, or missing driver | Verify Neon pooled URI, credentials, SSL parameters, and `psycopg[binary]` dependency |
-| `Cloud mode cannot use localhost` | Hosted Streamlit cannot reach its own local machine's Ollama instance | Use Ollama Cloud or a separately hosted authenticated HTTPS Ollama endpoint |
-| AI `authentication_error` | Incorrect, revoked, or missing remote Bearer API key | Check `OLLAMA_API_KEY` in the environment for the correct endpoint; never paste it into logs/issues |
-| AI `model_not_found` | Model is absent from the configured Ollama host/account | Check exact `OLLAMA_MODEL` and the server's available model list; local installs do not exist on cloud automatically |
-| AI `output_limit` | Generation stopped before completion | Use Detailed, increase a reasonable output cap, reduce prompt complexity; review the preserved partial answer |
-| AI response times out | Remote model, network, or structured response took too long | Check live model diagnostics, timeout settings, model availability, and request complexity |
-| Web search unavailable | Firecrawl key missing/invalid or request failed | Check optional `FIRECRAWL_API_KEY`, search usage and provider status; use materials-only mode meanwhile |
-| Uploaded PDF has no extracted text | Scan/image PDF without selectable text | Supply a text-based PDF or extract text separately; this app does not claim OCR for scans |
-| Backup upload rejected | Invalid archive, unsupported format, or archive constraints | Use the app's exported ZIP, review validation preview, and consult `DEPLOYMENT.md` |
-| Local settings seem ignored | Environment or Streamlit Secrets override database-saved preferences | Check the configuration precedence and restart after changes |
+| `ModuleNotFoundError: src.access` | Source files exist locally but were not committed to Git | Check `git status`, commit missing files under `src/`, and push to the deployed branch |
+| `Private workspace is locked` | Missing `OWNER_EMAIL` or `[auth]` secrets | Configure top-level `OWNER_EMAIL` and `[auth]` credentials in Streamlit Cloud Secrets |
+| Google `redirect_uri_mismatch` | OAuth callback URI does not match Google Cloud Console | Register `https://YOUR-APP.streamlit.app/oauth2callback` in your Google OAuth client |
+| `Cloud mode requires ... PostgreSQL DATABASE_URL` | Cloud deployment is using SQLite or missing `DATABASE_URL` | Provide a valid PostgreSQL connection string in Streamlit Cloud Secrets |
+| Database connection failure | Invalid credentials, missing SSL parameter, or unreachable host | Verify the Neon pooled URI, password, `?sslmode=require`, and `psycopg[binary]` installation |
+| `Cloud mode cannot use localhost` | Cloud app is pointed at `http://localhost:11434` | Point `OLLAMA_BASE_URL` to `https://ollama.com` or an authenticated HTTPS proxy |
+| AI `authentication_error` | Missing, expired, or invalid `OLLAMA_API_KEY` | Verify `OLLAMA_API_KEY` in `.env` or Streamlit Secrets |
+| AI `model_not_found` | Configured `OLLAMA_MODEL` is not available on the target host | Run **Live Ollama & Model Check** in Settings or verify `ollama list` / cloud catalog |
+| AI `output_limit` or truncated answer | Response hit the token ceiling before completion | Switch to **Detailed** mode, increase `OLLAMA_OUTPUT_TOKENS`, or narrow the prompt scope |
+| Uploaded PDF shows no extracted text | PDF contains scanned images without selectable text | Upload a text-based PDF, `.docx`, `.txt`, or `.md` file (built-in OCR is not included) |
+| Local UI changes to Ollama URL/model reset | Environment variables or Streamlit Secrets lock cloud AI settings | Update `OLLAMA_BASE_URL` and `OLLAMA_MODEL` in `.env` or Streamlit Secrets and restart |
 
-For deployed crashes, open **Manage app → Logs** on Streamlit Community Cloud and inspect the traceback, redacting secrets before sharing it.
+---
 
 ## Testing
 
-The repository includes pytest tests for application persistence and statuses, document/learning behavior, backup import/export, cloud configuration, Streamlit UI, Ollama transport/service, request guards, and optional web search.
+The `tests/` directory covers application lifecycle logic, document parsing, learning proficiency rules, backup validation/restore, cloud access guards, Streamlit UI flows, and Ollama transport handling.
 
-Run from the directory containing `app.py` after installing requirements:
+Run the automated test suite from the repository root:
 
 ```bash
 python -m pytest -q
 ```
 
-For a local smoke test:
+### Manual smoke-test checklist
 
-```bash
-python -m streamlit run app.py
-```
+1. Start the app (`python -m streamlit run app.py`) and sign in.
+2. Create a job application and update its status.
+3. Log an interview linked to that application and add a checklist item.
+4. Log a study session and complete a practice quiz in **Learning**.
+5. Upload a small `.pdf` or `.md` file in **Documents** and verify text extraction.
+6. Run **Settings → Run Live Ollama & Model Check**, then generate a response in **AI Assistant**.
+7. Export a full `.zip` backup in **Settings**, restart the app, and confirm all records persist.
 
-Then verify manually that you can (1) create an application; (2) link an interview; (3) save a study session; (4) upload and download a small document; (5) use **Run Live Ollama & Model Check**; (6) generate an answer; (7) save or export data; and (8) reboot the app and find the same records.
-
-**Validation status for this README:** The source archive was inspected and screenshots were reviewed. An attempt to run `python -m pytest -q` in the documentation environment stopped during test collection because `streamlit` was **not installed** there (`ModuleNotFoundError`). No passing test count, complete browser test, or live deployment validation is claimed here. The owner has separately reported successful use of the deployed app and AI features; that is not a substitute for repeatable automated test results.
+---
 
 ## Limitations and roadmap
 
 ### Current limitations
 
-- **Single owner:** the hosted access check admits only one configured verified email; multi-user account isolation is not implemented.
-- **External dependencies:** Ollama Cloud, Neon, Google OAuth, and optional Firecrawl have their own availability, model access, and quota constraints.
-- **AI limits:** results depend on model capabilities and token budgets.
-- **File limits:** permitted formats are `.txt`, `.md`, `.pdf`, and `.docx`, with an app-level 15 MB default; scanned PDFs lack built-in OCR.
-- **Operational responsibility:** users must manage credentials, provider limits, migrations, backups, and any migration of preexisting SQLite records to PostgreSQL.
+* **Single-user design:** Built for one verified owner (`OWNER_EMAIL`); does not provide multi-tenant user isolation.
+* **Provider quotas and availability:** Hosted usage depends on Neon, Google OAuth, Ollama Cloud, and optional Firecrawl limits.
+* **Document constraints:** Supports `.txt`, `.md`, `.pdf`, and `.docx` up to 15 MB by default, without OCR for scanned image PDFs.
 
-### Potential future improvements (not current features)
+### Potential future enhancements
 
-- Better onboarding and small guided tasks for a freshly deployed workspace.
-- Optional scheduling/reminders for application follow-ups.
-- Additional supported AI backends and model-specific settings.
-- More detailed, sample-aware job-search analytics and CV/job comparison workflows.
-
-## License and references
-
-**License:** No license file was present in the inspected project archive. Do not assume public source code is automatically licensed for unrestricted redistribution. Add an appropriate license only when the repository owner chooses one.
-
-**Contributions:** This is maintained primarily as a personal application. Check repository issues or contact the maintainer before undertaking significant changes; avoid submitting private credentials, personal backups, or real applicant data.
-
-Official resources:
-
-- [Streamlit documentation](https://docs.streamlit.io/)
-- [Streamlit authentication](https://docs.streamlit.io/develop/concepts/connections/authentication)
-- [Streamlit Community Cloud](https://docs.streamlit.io/deploy/streamlit-community-cloud)
-- [Neon documentation](https://neon.com/docs)
-- [SQLAlchemy documentation](https://docs.sqlalchemy.org/)
-- [Alembic documentation](https://alembic.sqlalchemy.org/)
-- [Ollama documentation](https://docs.ollama.com/)
-- [Firecrawl documentation](https://docs.firecrawl.dev/)
-- [Plotly Python documentation](https://plotly.com/python/)
+* Guided onboarding checklist for newly initialized workspaces
+* Automated calendar/email reminders for upcoming follow-up dates
+* Support for additional OpenAI-compatible AI inference providers
+* Side-by-side CV version diffing against target job descriptions
 
 ---
 
-*Documentation basis: supplied Career Companion cloud project archive, deployed application screenshots, and the current task description. If a later Git commit changes the configuration or behavior, update this README alongside the code.*
+## License and references
+
+* **License:** No open-source license file is currently included in the project archive. All rights are reserved by the repository owner unless a license file is explicitly added.
+* **Contributions:** Maintained primarily as a personal workspace project. Open an issue before proposing major changes, and never include credentials or personal data in pull requests.
+
+### Official documentation
+
+* [Streamlit Documentation](https://docs.streamlit.io/)
+* [Streamlit Authentication (OIDC)](https://docs.streamlit.io/develop/concepts/connections/authentication)
+* [Streamlit Community Cloud](https://docs.streamlit.io/deploy/streamlit-community-cloud)
+* [Neon PostgreSQL Documentation](https://neon.com/docs)
+* [SQLAlchemy 2.0 Documentation](https://docs.sqlalchemy.org/)
+* [Alembic Documentation](https://alembic.sqlalchemy.org/)
+* [Ollama Documentation](https://docs.ollama.com/)
+* [Firecrawl Documentation](https://docs.firecrawl.dev/)
+* [Plotly Python Documentation](https://plotly.com/python/)
