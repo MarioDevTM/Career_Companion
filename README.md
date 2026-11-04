@@ -33,26 +33,35 @@ Career Companion is a private, Python-based workspace for organizing a job searc
 
 **Workspace overview** — quick actions, active applications, interviews, follow-ups, study tasks, and recent activity.
 
-\!\[Career Companion dashboard with application and preparation summaries\]\(docs/screenshots/dashboard.jpg\)
+\!\[Career Companion dashboard with application and preparation summaries\]\(docs/screenshots/dashboard.jpg\)<img width="1649" height="812" alt="applications" src="https://github.com/user-attachments/assets/35987a59-a737-455f-a3c6-83b669f0e1f1" />
+
+
+
+
+
 
 \<details\>
 \<summary\>Explore more screenshots\</summary\>
 
 | Job applications | Interview preparation |
 | --- | --- |
-| \!\[Application tracking and status controls\]\(docs/screenshots/applications.jpg\) | \!\[Interview record and checklist\]\(docs/screenshots/interviews.jpg\) |
+| \!\[Application tracking and status controls\]\(docs/screenshots/applications.jpg\)<img width="1420" height="812" alt="dashboard" src="https://github.com/user-attachments/assets/eb0f2474-a6f8-45e3-9c11-1b84cb613bc8" /> | \!\[Interview record and checklist\]\(docs/screenshots/interviews.jpg\)<img width="1649" height="812" alt="interviews" src="https://github.com/user-attachments/assets/661d1abb-2aa6-4bcd-9800-4b4b056b99b9" />
+ |
 
 | Learning and revision | Context-aware AI assistant |
 | --- | --- |
-| \!\[Learning goals, quiz performance, and proficiency status\]\(docs/screenshots/learning.jpg\) | \!\[AI assistant with mode and context selection\]\(docs/screenshots/assistant.jpg\) |
+| \!\[Learning goals, quiz performance, and proficiency status\]\(docs/screenshots/learning.jpg\)<img width="1649" height="812" alt="learning" src="https://github.com/user-attachments/assets/0a20f6ed-1f8f-4711-87e1-3550dd69eaf4" />
+ | \!\[AI assistant with mode and context selection\]\(docs/screenshots/assistant.jpg\)<img width="1649" height="812" alt="assistant" src="https://github.com/user-attachments/assets/83b67c08-9463-439c-bd2b-960d65ad6d52" /> |
 
 | Experience Bank | Documents |
 | --- | --- |
-| \!\[Professional experience records with evidence and competency tags\]\(docs/screenshots/experience.jpg\) | \!\[Document upload and version form\]\(docs/screenshots/documents.jpg\) |
+| \!\[Professional experience records with evidence and competency tags\]\(docs/screenshots/experience.jpg\)<img width="1649" height="812" alt="experience" src="https://github.com/user-attachments/assets/d583be3d-8219-4c0c-aad0-fcc69c9c3851" />
+ | \!\[Document upload and version form\]\(docs/screenshots/documents.jpg\)<img width="1649" height="534" alt="documents" src="https://github.com/user-attachments/assets/a1c8293d-531c-4b35-aac4-2bf05065af6a" /> |
 
 | Insights | Configuration and diagnostics |
 | --- | --- |
-| \!\[Application conversion and analytics dashboard\]\(docs/screenshots/insights.jpg\) | \!\[Ollama endpoint settings and live connectivity check\]\(docs/screenshots/settings.jpg\) |
+| \!\[Application conversion and analytics dashboard\]\(docs/screenshots/insights.jpg\)<img width="1649" height="812" alt="insights" src="https://github.com/user-attachments/assets/662f3b47-c8ce-4dc3-b8d5-9e550a610d4b" />
+ | \!\[Ollama endpoint settings and live connectivity check\]\(docs/screenshots/settings.jpg\)<img width="1649" height="812" alt="settings" src="https://github.com/user-attachments/assets/f436d5e4-0a65-4253-8446-ff1a7713dc37" /> |
 
 \</details\>
 
